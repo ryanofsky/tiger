@@ -37,15 +37,17 @@ public class BlockRel extends Operand {
 	
 	output.append(offset.mipsSet("$t8") + "\n");
 	
-	output.append("subi $sp, $sp, 4\n");
-	output.append("sw $t8, $sp\n");
+	output.append("li $s0, 4\n");
+	output.append("sub $sp, $sp, $s0\n");
+	output.append("sw $t8, 0($sp)\n");
 	
 	output.append(base.mipsSet("$t9") + "\n");
 	
-	output.append("lw $t8, $sp\n");
+	output.append("lw $t8, 0($sp)\n");
 	output.append("addi $sp, $sp, 4\n");
 	
-	output.append("lw " + regName + ", $t8($t9)");
+	output.append("add $s0, $t8, $t9\n");
+	output.append("lw " + regName + ", 0($s0)");
 	
 	return output.toString();
 	}
@@ -56,15 +58,17 @@ public class BlockRel extends Operand {
 	
 	output.append(offset.mipsSet("$t8") + "\n");
 
-	output.append("subii $sp, $sp, 4\n");
-	output.append("sw $t8, $sp\n");
+	output.append("li $s0, 4\n");
+	output.append("sub $sp, $sp, $s0\n");
+	output.append("sw $t8, 0($sp)\n");
 	
 	output.append(base.mipsSet("$t9") + "\n");
 	
-	output.append("lw $t8, $sp\n");
+	output.append("lw $t8, 0($sp)\n");
 	output.append("addi $sp, $sp, 4\n");
 	
-	output.append("sw " + regName + ", $t8($t9)\n");
+	output.append("add $s0, $t8, $t9\n");
+	output.append("sw " + regName + ", 0($s0)\n");
 	
 	return output.toString();
 	}
