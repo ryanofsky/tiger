@@ -1,7 +1,7 @@
 package Semant;
 
 import antlr.collections.AST;
-//import TigerTokenTypes;
+import TigerTokenTypes;
 import java.lang.String;
 
 /// Helper class for creating standard library functions
@@ -56,8 +56,6 @@ public class Environment {
 	/// Standard library functions.  Arguments listed in reverse order.
 
 	new Builtin("print").arg("s", stringType).returns(voidType)
-	    .enter(vars);
-	new Builtin("printi").arg("i", intType).returns(voidType)
 	    .enter(vars);
 	new Builtin("flush").returns(voidType).enter(vars);
 	new Builtin("getchar").returns(stringType).enter(vars);
