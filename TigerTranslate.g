@@ -86,7 +86,12 @@ lvalue [ RecordInfo r ] returns [ LValue output = null;]
       isReadOnly = false;
       output = new LValue(d.fieldType, new BlockRel(lval1.operand, new IntConstant(counter)));
     }
-  | #( SUBSCRIPT lval1=lvalue[r] {Operand index = r.newTmp(); } type2=expr[index, r])
+  | #( SUBSCRIPT lval1=lvalue[r] 
+    {
+	r.mark();
+	Operand index = r.newTmp(); 
+    } 
+    type2=expr[index, r])
     {
       type1 = lval1.type;
 
@@ -101,6 +106,7 @@ lvalue [ RecordInfo r ] returns [ LValue output = null;]
       Type outType = ((ARRAY) type1.actual()).element;
 
       output = new LValue(outType, new BlockRel(lval1.operand, index));
+      //r.release();
     }
   ;
 
@@ -109,6 +115,7 @@ expr [ Operand d, RecordInfo r ] returns [Type t]
       Type a, b, c = null;
       t = env.getVoidType();
       LValue p;
+            
     }
   : "nil"
     {
@@ -141,24 +148,31 @@ expr [ Operand d, RecordInfo r ] returns [Type t]
       r.append( new Neg(d, d));
     }
     )
-  | #( BINOP a=expr[d,r]
+  | #( BINOP 
+    {
+    if(d == null)
+	{throw new IllegalArgumentException("Null destination.");}
+	
+	Operand temp1 = r.newTmp();
+    }	
+    a=expr[temp1,r]
     {
       String op = #expr.getText();
       Label lazyLabel = null;
       if (op.equals("|"))
       {
         lazyLabel = new Label();
-        r.append(new Bnz(new LabelOperand(lazyLabel), d));
+        r.append(new Bnz(new LabelOperand(lazyLabel), temp1));
       }
       else if (op.equals("&"))
       {
         lazyLabel = new Label();
-        r.append(new Bz(new LabelOperand(lazyLabel), d));
+        r.append(new Bz(new LabelOperand(lazyLabel), temp1));
       }
 
       Operand tmp;
       if (lazyLabel != null)
-        tmp = d;
+        tmp = temp1;
       else
       {
         r.mark();
@@ -195,6 +209,8 @@ expr [ Operand d, RecordInfo r ] returns [Type t]
       if (lazyLabel != null)
       {
         r.append(lazyLabel);
+	r.append(new Mov(d, temp1));
+	
       }
       else
       {
@@ -222,7 +238,7 @@ expr [ Operand d, RecordInfo r ] returns [Type t]
         else // can never happen
           throw new Error("Internal Error. Unrecognized operator '" + op + "'");
 
-        r.append(new Binop(opCode, d, d, tmp));
+        r.append(new Binop(opCode, d, temp1, tmp));
         r.release();
       }
     }
@@ -244,10 +260,11 @@ expr [ Operand d, RecordInfo r ] returns [Type t]
       if(env.vars.get(z.getText()) == null)
         {semantError(z, "undefined function " + z.getText());}
 
+
       FunEntry theFunction = (FunEntry) env.vars.get(z.getText());
       RECORD jello = theFunction.formals;
       Type result = theFunction.result;
-      int argCount = 0;
+      int argCount = -1;
 
       r.mark();
       FrameRel lastOp = null; // first argument goes here, other arguments go before that
@@ -255,9 +272,13 @@ expr [ Operand d, RecordInfo r ] returns [Type t]
         lastOp = (FrameRel) r.newEndTmp();
       Operand retVal = theFunction.result.actual() instanceof VOID ? null : r.newEndTmp();
 
-      r.newEnd();
+	if(retVal != null)
+	    {argCount = -2;}
 
-    } (a=expr[new FrameRel(lastOp.offset - argCount),r]
+      r.newEnd();
+      
+      
+    } ( { FrameRel fr = new FrameRel(argCount); r.functionArgs.add(fr); System.out.println("ArgCount: " + argCount);} a=expr[fr,r]
     {
       if(jello == null)
           {semantError(z, "Too many arguments for function '" + z.getText() + "' (" + argCount + " expected)");}
@@ -266,7 +287,7 @@ expr [ Operand d, RecordInfo r ] returns [Type t]
           {semantError(z, "Argument " + (argCount + 1) + " for function '" + z.getText() + "' has the wrong type.");}
 
       jello = jello.tail;
-      ++argCount;
+      --argCount;
     } )*
     {
       if(jello != null)
@@ -281,7 +302,7 @@ expr [ Operand d, RecordInfo r ] returns [Type t]
       int depth = 0;
       for (RecordInfo ri = r; ri != null; ri = ri.parent)
       {
-        Object o = ri.topScope.get(z.getText());
+        Object o = ri.topScope.get((z.getText()).trim());
         if (o != null)
         {
           func = new LabelOperand((Label)o);
@@ -290,7 +311,11 @@ expr [ Operand d, RecordInfo r ] returns [Type t]
         ++depth;
       }
 
+    if(func == null)
+	{throw new IllegalArgumentException("Undeclared function: " + z.getText());}
+
       r.append(new Jsr(func, depth));
+      System.out.println("Depth: " + depth);
       if (retVal != null) r.append(new Mov(d, retVal));
       r.release();
     }
@@ -307,11 +332,27 @@ expr [ Operand d, RecordInfo r ] returns [Type t]
         {semantError(#expr, fuckoff.getText() + " is not a valid name for a record.");}
 
       RECORD ourRec = (RECORD) recType.actual();
+      t = ourRec;
 
       /* Create the new record with a rec statement */
+      int size = 1;
+      RECORD tempRec = ourRec;
+      
+      while(tempRec.tail != null)
+	{
+	tempRec = tempRec.tail;
+	size++;
+	}
+      
+      r.append(new Rec(d, size));
+      
+      int sectionNumber = 0;
+      
     }
-    (#(FIELD g:ID {/* Store each expression with the proper offset */} a=expr[d,r])
+    (#(FIELD g:ID {BlockRel blr = new BlockRel(d, new IntConstant(sectionNumber));} a=expr[blr,r])
     {
+	sectionNumber++;
+	
       if(ourRec == null)
         {semantError(#expr, "You have assigned to more fields than this record has in its definition.");}
 
@@ -330,7 +371,7 @@ expr [ Operand d, RecordInfo r ] returns [Type t]
       t = recType;
     }
     )
-  | #( NEWARRAY anddie:ID a=expr[d,r] b=expr[d,r]
+  | #( NEWARRAY anddie:ID {Operand size = r.newTmp(); } a=expr[size,r] b=expr[d,r]
     {
       Type selected = (Type) env.types.get(anddie.getText());
       selected = selected.actual();
@@ -349,13 +390,22 @@ expr [ Operand d, RecordInfo r ] returns [Type t]
        t = canidate;
 
        /* Create a new array with an arr statement */
+       
+       Operand value = d;
+       r.append(new Arr(d, size, value));
     }
     )
-  | #( "if" a=expr[d,r]
+  | #( "if" 
+    {
+    r.mark();
+    Operand boolTemp = r.newTmp();
+    }
+    a=expr[boolTemp,r]
     {
       Label ifElse = new Label();
       Label ifExit = new Label();
-      r.append(new Bz(new LabelOperand(ifElse), d));
+      r.append(new Bz(new LabelOperand(ifElse), boolTemp));
+      r.release();
     } b=expr[d,r]
     {
       r.append(new Jmp(new LabelOperand(ifExit)))
@@ -386,11 +436,14 @@ expr [ Operand d, RecordInfo r ] returns [Type t]
       Label topWhile = new Label();
       Label bottomWhile = new Label();
       r.append(topWhile);
-    } a=expr[d,r]
+      r.mark();
+      Operand wTemp = r.newTmp();
+    } a=expr[wTemp,r]
     {
       env.enterScope();
       env.vars.put("break viable", new LabelOperand(bottomWhile));
-      r.append(new Bz(new LabelOperand(bottomWhile), d));
+      r.append(new Bz(new LabelOperand(bottomWhile), wTemp));
+      r.release();
     } b=expr[d,r]
     {
       if(!(a.actual() instanceof Semant.INT))
@@ -422,10 +475,12 @@ expr [ Operand d, RecordInfo r ] returns [Type t]
     {
       Label topFor = new Label();
       r.append(topFor);
-    } b=expr[d,r]
+      r.mark();
+      Operand tempVar = r.newTmp();
+    } b=expr[tempVar,r]
     {
-      r.append(new Binop(Binop.GT, d, loopVar, d))
-       .append(new Bnz(new LabelOperand(bottomFor), d));
+      r.append(new Binop(Binop.GT, tempVar, loopVar, tempVar))
+       .append(new Bnz(new LabelOperand(bottomFor), tempVar));
     } c=expr[d,r]
     {
       if(!(a.actual() instanceof Semant.INT))
@@ -442,6 +497,7 @@ expr [ Operand d, RecordInfo r ] returns [Type t]
        .append(bottomFor);
 
       r.leaveScope();
+      r.release();
     }
     )
   | "break"
@@ -522,12 +578,15 @@ decl [ Operand d, RecordInfo r ]
       env.types.put(text, alias);
     }
     )
-  | #( "var" i:ID (a=type | "nil") b=expr[d,r]
+  | #( "var" i:ID (a=type | "nil") {Operand v = r.newVar(i.getText());}
+  b=expr[v,r]
     {
       if(a != null && !b.coerceTo(a))
         {semantError(i, "You cannot place a value of one type in a variable of an incompatible type.");}
 
       env.vars.put(i.getText(), new VarEntry(b));
+      
+
     }
     )
   | #( "function" n:ID {RECORD l;} l=fields (a=type | "nil" { a = null; } )
@@ -536,6 +595,11 @@ decl [ Operand d, RecordInfo r ]
         {a = env.getVoidType();}
       FunEntry additionalFunction = new FunEntry(l, a);
       env.vars.put(n.getText(), additionalFunction);
+      
+    //.....
+    RecordInfo activationRec = new RecordInfo(n.getText(), r);
+    r.enterFunc((n.getText()).trim(), activationRec.func);
+    r.putThing(" " + n.getText(), activationRec);
     }
     )
   ;
@@ -554,17 +618,18 @@ decl2 [ Operand d, RecordInfo r ] returns [String s = null;]
     }
     )
   | #( "var"
-       i:ID { Operand v = r.newVar(i.getText()); }
+       i:ID { Operand v = r.findVar(i.getText()); }
        (ID | "nil")
-       a=expr[v,r]
+
     )
   | #( "function" n:ID FIELDS .
-    {
+    {    
       FunEntry additionalFunction = (FunEntry)env.vars.get(n.getText());
       RECORD l = additionalFunction.formals;
       env.enterScope();
 
-      RecordInfo activationRec = new RecordInfo(n.getText(), r);
+      //RecordInfo activationRec = new RecordInfo(n.getText(), r);
+      RecordInfo activationRec = (RecordInfo) r.getThing(" " + n.getText());
       Operand retVal = additionalFunction.result.actual() instanceof VOID ? null :new FrameRel(-1);
 
       // put argument offsets in symbol table
@@ -575,6 +640,7 @@ decl2 [ Operand d, RecordInfo r ] returns [String s = null;]
         activationRec.topScope.put(l.fieldName, new Integer(--argOffset));
         l = l.tail;
       }
+
     } b=expr[retVal, activationRec]
     {
       env.leaveScope();
@@ -584,7 +650,8 @@ decl2 [ Operand d, RecordInfo r ] returns [String s = null;]
 
       activationRec.append(new Rts());
       activationRec.allocateStack();
-      r.enterFunc(n.getText(), activationRec.func);
+	System.out.println("Declaring function: " + n.getText());
+      r.enterFunc((n.getText()).trim(), activationRec.func);
       
     }
     )
