@@ -35,7 +35,7 @@ public class Jsr extends Statement {
 	links = "  move $a0, $fp\n";
 	for ( int i = 0 ; i < depth ; i++ )
 	    links = links + "  lw $a0, -4($a0)\n";
-	return links + "  jal " + dest.string();
+	return links + "  jal " + dest.value().mipsName();
     }
 
 }
