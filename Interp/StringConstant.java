@@ -20,6 +20,12 @@ public class StringConstant extends Operand {
 	    "  .asciiz \"" + escapedString() + "\"\n" +
 	    "  .text\n" +
 	    "  la " + reg + ", " + lab;
+	    
+	    
+	    
+	    /*
+	    "  la " + reg + ", " + lab;
+	    */
     }
 
     String escapedString() {
