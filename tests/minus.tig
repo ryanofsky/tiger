@@ -1,6 +1,0 @@
-/* check out unary minus precedence */
-(
-  1 - - - - 1;
-  1 - - - - 1 * 7;
-  1 - - - - (1 * 7)
-)

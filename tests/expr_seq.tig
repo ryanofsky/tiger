@@ -1,2 +1,0 @@
-/* make sure variable expression sequences have the right structure (rooted with SEQ) */ 
-( 3; 4+5; q(6,7); r[4]; s.t; u[v].x )

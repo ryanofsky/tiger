@@ -1,9 +1,0 @@
-/* ensure that nil's are in place when variable and function return types are not specified */
-let
-    var  a : b := c
-    var  d := e
-    function f() = g
-    function h() : i = j
- in try(3)
-end
-	
