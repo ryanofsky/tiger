@@ -1,0 +1,9 @@
+Program 4
+
+Most of the work on our compiler was done on implementing the tiger standard library functions and on the filling in the missing methods in the java classes representing statements and operands.
+
+The standard library functions are basically just long strings just long strings of mips assembly code. The java code in Sys.java builds up these strings and a loop in TC.java prints them out. The implementations were pretty straightforward. The print(), printi(), getchar(), flush(), and exit() implementations invoke mips syscalls. The not() function uses mips arithmetic. The rest of the functions are string functions. Since there is no support for manipulating strings in mips assembly, they have to manipulate characters, allocating memory and looping as neccessary.
+
+
+
+
