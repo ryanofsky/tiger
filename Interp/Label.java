@@ -20,7 +20,7 @@ public class Label extends Statement {
     /// Do nothing; return the next statement
     public Statement execute(Environment e) { return next; }
 
-    public String mipsName() { return name.equals("not") ? "Not" : name; } 
+    public String mipsName() { return name.equals("main") ? "main" : name.toUpperCase(); } 
     public String mips() { return mipsName() + ":\n"; }
     
     public String toString() { return mipsName(); } 
