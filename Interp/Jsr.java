@@ -9,7 +9,13 @@ public class Jsr extends Statement {
     /// Number of static links to traverse to locate the new static link
     int depth;
 
-    public Jsr(LabelOperand dst, int dep) { dest = dst; depth = dep; }
+    public Jsr(LabelOperand dst, int dep) {
+    if(dst == null)
+	{throw new IllegalArgumentException("Can't jump to nowhere.");}
+    
+    
+     dest = dst; depth = dep; 
+     }
 
     public String string() {
 	return "  jsr " + dest.string() + ", " + Integer.toString(depth, 10);
