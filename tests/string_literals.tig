@@ -1,0 +1,2 @@
+/* string literals */
+"d\^A\^Adz" + "sorry\     \charlie" + "\"hello\"" + "a\066c"
