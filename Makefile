@@ -1,4 +1,4 @@
-TEST_CASES = merge queens test1 test10 test11 test12 test13 test14 test15 test16 test17 test18 test19 test2 test20 test21 test22 test23 test24 test25 test26 test27 test28 test29 test3 test30 test31 test32 test33 test34 test35 test36 test37 test38 test39 test4 test40 test41 test42 test43 test44 test45 test46 test47 test48 test49 test5 test6 test7 test8 test9
+TEST_CASES = comments decl_group expr_seq lvalues minus nil_types op_order queens spec_stuff string_literals
 
 ANTLR_IN = tiger.g
 ANTLR_JAVA = TigerLexer.java TigerParserTokenTypes.java TigerParser.java
@@ -21,10 +21,11 @@ clean : testclean
 test : $(TEST_CASES)
 	
 $(TEST_CASES) : all
-	java Tig2xml ./test_in/$@.tig > ./test_out/$@.xml
+	java Tig2xml ./tests/$@.tig > ./tests_out/$@.xml
+	diff -w ./tests_out/$@.xml ./tests_canon/$@.xml
 
 testclean :
-	rm ./test_out/*.xml
+	-rm ./tests_out/*.xml
 
 $(ANTLR_JAVA) $(ANTLR_CRUFT): $(ANTLR_IN) $(AST_CRUFT)
 	java antlr.Tool $(ANTLR_IN) 
