@@ -1,9 +1,0 @@
-let
-  type a = array of int
-  var a := a [5] of 0
-  var b := 3
-in
-  b := a[3];
-  a[4] := 7;
-  b := 8
-end

@@ -1,6 +1,0 @@
-let
-  var a := 8
-  var b := a + 5
-in
-  a + b + 10
-end
