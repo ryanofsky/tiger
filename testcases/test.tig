@@ -1,0 +1,6 @@
+let
+  var a := 8
+  var b := 9 
+in
+  10
+end
