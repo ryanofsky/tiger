@@ -1,0 +1,4 @@
+/*test for if-then-else and logic op */
+if (1<>2 | 3=4) 
+  then  printi(1)
+  else  printi(0)

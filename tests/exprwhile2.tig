@@ -1,0 +1,8 @@
+/*break in the while loop */
+let 
+ var a:=3
+in
+ while(a>0)
+  do (a:=a-1;break);
+ printi(a)
+end

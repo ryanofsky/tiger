@@ -1,0 +1,8 @@
+/*fully nested if-then-else */
+if (100>101)
+ then if (200>201)
+       then  printi(203)
+       else  printi(205)
+ else if (300>301)
+       then printi(303)
+       else printi(304)    

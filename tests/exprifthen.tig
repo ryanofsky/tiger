@@ -1,0 +1,3 @@
+/*simply test if-then and logic op */
+if (101>100 & 1<2)
+ then printi(1)
