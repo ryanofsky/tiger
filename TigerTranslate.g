@@ -22,449 +22,467 @@ options {
 {
   Environment env = new Environment();
 
-    boolean isReadOnly = false;
+  boolean isReadOnly = false;
     
-
   void semantError(LineAST a, java.lang.String s) {
     System.err.println(a.getLine() + ":" + s);
     System.exit(1);
   }
 }
 
-
-
-
-lvalue [ RecordInfo r ] returns [ Pair output = null;]
+lvalue [ RecordInfo r ] returns [ LValue output = null;]
     {
-    Type t;
-    Type a, b;
-    Pair p;
-    Operand o; 
-    Operand lval = null; 
+      Type type1, type2;
+      LValue lval1;
     }
   : i:ID 
     { 
-
-    t = env.getVoidType(); 
-    
-      /* Verify ID is a variable in the current scope, return its type */
       Entry e = (Entry) env.vars.get(i.getText());
       if ( e == null )
         semantError(i, "Undefined identifier " + i.getText());
       if ( !(e instanceof VarEntry) )
         semantError(i, i.getText() + " is not a variable");
-	
-    if(env.vars.get(i.getText() + " isLocked") != null)
-	{isReadOnly = true;}
-    else
-	{isReadOnly = false;}
-
-      VarEntry v = (VarEntry) e;
-      t = v.ty;
+          
+      if(env.vars.get(i.getText() + " isLocked") != null)
+        {isReadOnly = true;}
+      else
+        {isReadOnly = false;}
       
-      output = new Pair(t, r.findVar(i.getText()));
+      VarEntry v = (VarEntry) e;
+      
+      output = new LValue(v.ty, r.findVar(i.getText()));
     }
-  | #( FIELD p=lvalue[r] m:ID )
-    { /* Verify lvalue is of record type with ID as a field */
-    
-    a = (Type) p.left;
-    a = a.actual();
-    
-    if(!(a.actual() instanceof RECORD))
+  | #( FIELD lval1=lvalue[r] m:ID )
+    { 
+      type1 = lval1.type.actual();
+      
+      if(!(type1 instanceof RECORD))
         {semantError(#lvalue, #lvalue.getText() + " is not a record.");}
-
-    RECORD d = (RECORD) a;
-
-    String identifierName = m.getText();
-
-    int counter = 0;
-    
-    while(!d.fieldName.equals(identifierName))
-        {
-	counter++;
+      
+      RECORD d = (RECORD) type1;
+      
+      String identifierName = m.getText();
+      
+      int counter = 0;
+      while(!d.fieldName.equals(identifierName))
+      {
+        counter++;
         d = d.tail;
-
+      
         if(d == null)
-            {
-            semantError(#lvalue, #lvalue.getText() + " is not a field in this record.");
-            break;
-            }
+        {
+          semantError(#lvalue, #lvalue.getText() + " is not a field in this record.");
+          break;
         }
-
-    isReadOnly = false;
-    t = d.fieldType;
-    
-    BlockRel br = new BlockRel((Operand) p.right, new IntConstant(counter));
-    
-    //here.
-    output = new Pair(t, br);
+      }
+      
+      isReadOnly = false;
+      output = new LValue(d.fieldType, new BlockRel(lval1.operand, new IntConstant(counter)));
     }
-  | #( SUBSCRIPT p=lvalue[r] {Operand tmp = r.newTmp();} b=expr[tmp, r]
-    { /* Verify lvalue is an array type and expr is an int */
-    a = (Type) p.left;
-    
-    if(!(a.actual() instanceof ARRAY))
-        {semantError(#lvalue, "This is not an array: " + a);}
-
-    if(!(b.actual() instanceof Semant.INT))
+  | #( SUBSCRIPT lval1=lvalue[r] {Operand index = r.newTmp();} type2=expr[index, r])
+    {
+      type1 = lval1.type;
+      
+      if(!(type1.actual() instanceof ARRAY))
+        {semantError(#lvalue, "This is not an array: " + type1);}
+      
+      if(!(type2.actual() instanceof Semant.INT))
         {semantError(#lvalue, "Array indices must be integers");}
-
-    isReadOnly = false;
-    t = ((ARRAY) a.actual()).element;
-    
-    BlockRel br = new BlockRel((Operand) p.right, tmp);
-    
-    output = new Pair(t, br);
+      
+      isReadOnly = false;
+      
+      output = new LValue(((ARRAY) type1.actual()).element, new BlockRel(lval1.operand, index));
     }
-    );
-
-
-
-
-
-
-
-
+  ;
 
 expr [ Operand d, RecordInfo r ] returns [Type t] 
     {
-    Type a, b, c = null; 
-    t = env.getVoidType();
-    Operand o;
-    Pair p;
+      Type a, b, c = null; 
+      t = env.getVoidType();
+      Operand o;
+      LValue p;
     }
   : "nil" 
     { 
-    t = env.getNilType(); 
-    r.append( new Mov(d, new NilConstant() ) );
+      t = env.getNilType(); 
+      r.append( new Mov(d, new NilConstant() ) );
     }
   | p=lvalue[r]
     {
-    t = (Type) p.left;
-    r.append( new Mov(d, (Operand) p.right));
+      t = p.type;
+      r.append( new Mov(d,p.operand));
     }
   | s:STRING 
     {
-    r.append( new Mov(d, new StringConstant(s.getText()))); 
-    t = env.getStringType(); 
+      r.append( new Mov(d, new StringConstant(s.getText()))); 
+      t = env.getStringType(); 
     }
   | n:NUMBER 
     {
-    r.append(new Mov(d, new IntConstant(Integer.parseInt(n.getText(),10))));
-    t = env.getIntType(); 
+      r.append(new Mov(d, new IntConstant(Integer.parseInt(n.getText(),10))));
+      t = env.getIntType(); 
     }
-  | #( NEG a=expr[d, r]
-       { /* Verify expr is an int */
-           if ( !(a.actual() instanceof Semant.INT))
-                semantError(#expr, "Operand of unary minus must be integer");
-           t = env.getIntType();
-       }
-     )
-     { 
-     r.append( new Neg(d, d)); 
-     }
-  | #( BINOP a=expr[d,r] {r.mark(); Operand tmp = r.newTmp();} b=expr[tmp,r]
-       { /* Verify expr's types match, more picky for non-equality. */
-         String op = #expr.getText();
-         if ( op.equals("+") ||
-              op.equals("-") ||
-              op.equals("*") ||
-              op.equals("/") ||
-              op.equals("|") ||
-              op.equals("&")              
-              ) {
-             if (!(a.actual() instanceof Semant.INT) ||
-                 !(b.actual() instanceof Semant.INT))
-                 semantError(#expr, "operands of " + op + " must be integer");
-             t = a;
-         } else { // op is one of: = > < <> >= <=
-            if(!b.coerceTo(a) && !a.coerceTo(b))
-                {semantError(#expr, "operands of " + op + " must be of the same type.");}
+  | #( NEG a=expr[d, r] )
+    { 
+      if ( !(a.actual() instanceof Semant.INT))
+        semantError(#expr, "Operand of unary minus must be integer");
+      t = env.getIntType();
 
-            if(a.actual() instanceof VOID)
-                {semantError(#expr, "operands of " + op + " cannot be applied to void types.");}
+      r.append( new Neg(d, d)); 
+    }
+  | #( BINOP a=expr[d,r] 
+    {
+      String op = #expr.getText();
+      Label lazyLabel = null;
+      if (op.equals("|"))
+      {
+        lazyLabel = new Label();
+        r.append(new Bnz(new LabelOperand(lazyLabel), d));           
+      }
+      else if (op.equals("&"))
+      {
+        lazyLabel = new Label();
+        r.append(new Bz(new LabelOperand(lazyLabel), d));
+      }
+      
+      Operand tmp;
+      if (lazyLabel != null)
+        tmp = d;
+      else
+      {
+        r.mark();
+        tmp = r.newTmp();
+      }
+      
+    } b=expr[tmp,r])
+    {
+      
+      if ( op.equals("+") ||
+           op.equals("-") ||
+           op.equals("*") ||
+           op.equals("/") ||
+           op.equals("|") ||
+           op.equals("&")              
+         )
+      {
+        if (!(a.actual() instanceof Semant.INT) ||
+            !(b.actual() instanceof Semant.INT))
+          semantError(#expr, "operands of " + op + " must be integer");
+        t = a;
+      } 
+      else // op is one of: = > < <> >= <=
+      { 
+        if(!b.coerceTo(a) && !a.coerceTo(b))
+            {semantError(#expr, "operands of " + op + " must be of the same type.");}
+        
+        if(a.actual() instanceof VOID)
+            {semantError(#expr, "operands of " + op + " cannot be applied to void types.");}
+        
+        t = env.getIntType();
+      }
 
-            t = env.getIntType();
-         }
-	 
-	 
-	// FIXME: Change this to use the right operator
-	r.append( new Binop(Binop.ADD, d, d, tmp));
-	r.release();
-       }
-     )
-  | #( ASSIGN {isReadOnly = false;} p=lvalue[r]
-	{
-	if(isReadOnly)
-	    {semantError(#expr, "You cannot assign to a read only variable.");}
-
-	o = (Operand) p.right;
-	a = (Type) p.left;
-	}
+      if (lazyLabel != null)
+      {
+        r.append(lazyLabel); 
+      }      
+      else
+      {
+        int opCode;
+        if (op.equals("+"))
+          opCode = Binop.ADD;
+        else if(op.equals("-"))
+          opCode = Binop.SUB;      
+        else if(op.equals("*"))
+          opCode = Binop.MUL;      
+        else if(op.equals("/"))
+          opCode = Binop.DIV;      
+        else if(op.equals("="))
+          opCode = Binop.EQU;      
+        else if(op.equals("<>"))
+          opCode = Binop.NEQ;      
+        else if(op.equals("<"))
+          opCode = Binop.LT;      
+        else if(op.equals(">="))
+          opCode = Binop.LEQ;      
+        else if(op.equals(">"))
+          opCode = Binop.GT;      
+        else if(op.equals(">="))
+          opCode = Binop.GEQ;
+        else // can never happen
+          throw new Error("Internal Error. Unrecognized operator '" + op + "'");    
+          
+        r.append(new Binop(opCode, d, d, tmp));
+        r.release();        
+      }
+    }
+     
+  | #( ASSIGN {isReadOnly = false;} p=lvalue[r] )
+    {
+      if(isReadOnly)
+        {semantError(#expr, "You cannot assign to a read only variable.");}
+      
+      o = p.operand;
+      a = p.type;
+    }
     b=expr[o,r]
-       { /* Verify the lvalue's type matches the expr's type */
-
-        if(!b.coerceTo(a))
-            {semantError(#expr, "Cannot assign a value of one type to a variable of a different type.");}
-
-        t = env.getVoidType();
-       }
-     )
+    {
+      if(!b.coerceTo(a))
+          {semantError(#expr, "Cannot assign a value of one type to a variable of a different type.");}
+      t = env.getVoidType();
+    }
   | #( CALL z:ID
-        {
-        if(env.vars.get(z.getText()) == null)
-            {semantError(z, "undefined function " + z.getText());}
+    {
+      if(env.vars.get(z.getText()) == null)
+        {semantError(z, "undefined function " + z.getText());}
+      
+      FunEntry theFunction = (FunEntry) env.vars.get(z.getText());
+      RECORD jello = theFunction.formals;
+      Type result = theFunction.result;
+      int argCount = 0;
 
-        FunEntry theFunction = (FunEntry) env.vars.get(z.getText());
-        RECORD jello = theFunction.formals;
-        Type result = theFunction.result;
-        int argCount = 0;
+      FrameRel lastOp = null; // first argument goes here, other arguments go before that
+      for(RECORD params = jello; params != null; params = params.tail)
+        lastOp = (FrameRel) r.newTmp();
 
-        }
-    (a=expr[d,r] {
-
-        if(jello == null)
-            {semantError(z, "Too many arguments for function '" + z.getText() + "' (" + argCount + " expected)");}
-
-        if(!a.coerceTo(jello.fieldType))
-            {semantError(z, "Argument " + (argCount + 1) + " for function '" + z.getText() + "' has the wrong type.");}
-
-        jello = jello.tail;
-        ++argCount;
-        })*
-       { 
-
-        if(jello != null)
-            {semantError(z, "Too few arguments specified for function '" + z.getText() + "'");}
-
-         t = result;
-
-	/* 
-	    Allocate space for each of the arguments, evaluate each, and
-            call the function with a jsr.  Find the label with r.getFunc 
-	*/
-
-
-
-
-       }
-     )
-  | #( SEQ { t = env.getVoidType(); } (t=expr[d,r])*
-       { /* Return the type of the last expression or nil */ }
+    } (a=expr[new FrameRel(lastOp.offset - argCount),r]
+    {
+      if(jello == null)
+          {semantError(z, "Too many arguments for function '" + z.getText() + "' (" + argCount + " expected)");}
+      
+      if(!a.coerceTo(jello.fieldType))
+          {semantError(z, "Argument " + (argCount + 1) + " for function '" + z.getText() + "' has the wrong type.");}
+      
+      jello = jello.tail;
+      ++argCount;      
+    } )*
+    { 
+      if(jello != null)
+          {semantError(z, "Too few arguments specified for function '" + z.getText() + "'");}
+      
+      t = result;
+      
+      Operand retVal = r.newTmp();
+      
+      // XXX: what is the second parameter to Jsr supposed to be?
+      r.append(new Jsr(new LabelOperand((Label)r.getFunc(z.getText())), 0))
+       .append(new Mov(d, retVal));
+    }
     )
+  | #( SEQ { t = env.getVoidType(); } (t=expr[d,r])* )
   | #( RECORD fuckoff:ID 
     {
-    Type recType = (Type) env.types.get(fuckoff.getText());
-    
-    if (recType == null)
-	{ semantError(#expr, "Undefined type: " + fuckoff.getText()); }
-    
-    if(!(recType.actual() instanceof RECORD))
-	{semantError(#expr, fuckoff.getText() + " is not a valid name for a record.");}
-    
-    RECORD ourRec = (RECORD) recType.actual();
-    
-    /* Create the new record with a rec statement */
+      Type recType = (Type) env.types.get(fuckoff.getText());
+      
+      if (recType == null)
+        { semantError(#expr, "Undefined type: " + fuckoff.getText()); }
+      
+      if(!(recType.actual() instanceof RECORD))
+        {semantError(#expr, fuckoff.getText() + " is not a valid name for a record.");}
+      
+      RECORD ourRec = (RECORD) recType.actual();
+      
+      /* Create the new record with a rec statement */
     } 
     (#(FIELD g:ID {/* Store each expression with the proper offset */} a=expr[d,r])
-	{
-	if(ourRec == null)
-	    {semantError(#expr, "You have assigned to more fields than this record has in its definition.");}
-	
-	if(!ourRec.fieldName.equals(g.getText()))
-	    {semantError(#expr, "The field names given in the initialization of this record don't match the field types in its declaration.");}
-    
-	if(!a.coerceTo(ourRec.fieldType))
-	    {semantError(#expr, "The type of the value assigned to " + ourRec.fieldName + " does not match the declared type of the field.");}
-    
-	ourRec = ourRec.tail;
-	}
-    )*
-       { /* Verify ID is a record type and that the listed fields match those
-            of the record type */
-	
-	if(ourRec != null)
-	    {semantError(#expr, "You must assign to all of the record's fields.");} 
-	    
-	t = recType;
-       }
-     )
+    {
+      if(ourRec == null)
+        {semantError(#expr, "You have assigned to more fields than this record has in its definition.");}
+      
+      if(!ourRec.fieldName.equals(g.getText()))
+        {semantError(#expr, "The field names given in the initialization of this record don't match the field types in its declaration.");}
+      
+      if(!a.coerceTo(ourRec.fieldType))
+        {semantError(#expr, "The type of the value assigned to " + ourRec.fieldName + " does not match the declared type of the field.");}
+      
+      ourRec = ourRec.tail;
+    } )*
+    { 
+      if(ourRec != null)
+          {semantError(#expr, "You must assign to all of the record's fields.");} 
+          
+      t = recType;
+    }
+    )
   | #( NEWARRAY anddie:ID a=expr[d,r] b=expr[d,r]
-       { 
-        Type selected = (Type) env.types.get(anddie.getText());
-        selected = selected.actual();
-
-        if(!(selected instanceof ARRAY))
-            {semantError(anddie, anddie.getText() + " is not a valid array type.");}
-
-        ARRAY canidate = (ARRAY) selected;
-
-        if(!(a.actual() instanceof Semant.INT))
-            {semantError(anddie, "Array sizes must be integers.");}
-
-        if(!b.coerceTo(canidate.element))
-            {semantError(anddie, "Cannot initialize an array to a value of a type other than the type of the array.");}
-
-         t = canidate;
-	 
-	 /* Create a new array with an arr statement */
-       }
-     )
-  | #( "if" a=expr[d,r] b=expr[d,r] (c=expr[d,r])?
-       { /* Verify the first expr is an int, that the second, if alone, is
-            nothing, and the second and third match if there's a third */
-
-        if (!(a.actual() instanceof Semant.INT))
-            {semantError(#expr, "The predicate of an if statement must be of integer type.");}
-
-        if (c == null && !(b.actual() instanceof VOID))
-            {semantError(#expr, "The then block of an if statment cannot return a value if there is no else block.");}
-        else if (c != null)
-            {
-            if (c.coerceTo(b))
-                {t = b.actual();}
-            else if (b.coerceTo(c))
-                {t = c.actual();}
-            else
-                {semantError(#expr, "The types of the then and else blocks of an if statement must match.");}
-
-            }
-
-        t = b.actual();
-
-        c = null;
-	
-	/* 
-	    Evaluate the first expression, bz past the first
-            expression's code, unconditional branch to the end,
-            evalute the second expression, if any,
-            then finally add the trailing label. 
-	*/
-	
-       }
-     )
-  | #( "while" a=expr[d,r] {env.enterScope(); env.vars.put("break viable", "true"); } b=expr[d,r]
-       {
-        if(!(a.actual() instanceof Semant.INT))
-            {semantError(#expr, "The predicate of a while statement must be of integer type.");}
-
-       if(!(b.actual() instanceof VOID))
-            {semantError(#expr, "Foolishly, Tiger does not allow while statements to have a type. May I suggest a do-nothing assignment within the loop to force the value of the body of the while loop to be void?");}
-
-	 //added to allow break checking. 
-	 env.leaveScope();
-	t = env.getVoidType();
-	
-	/* 
-	    Evaluate the first expression, bz to the end,
-            evaluate the second expression, then branch back to
-            the beginning. 
-	*/
-       }
-     )
-  | #( "for" m:ID a=expr[d,r] b=expr[d,r] 
-	{ 
-	env.enterScope(); 
-	env.vars.put(m.getText(), new VarEntry(env.getIntType())); 
-	env.vars.put("break viable", "true");
-	env.vars.put(m.getText() + " isLocked", "true");
-	} c=expr[d,r]
-       { 
-         if(!(a.actual() instanceof Semant.INT))
-            {semantError(m, "The starting value of " + m.getText() + " must be an integer.");}
-
-         if(!(b.actual() instanceof Semant.INT))
-            {semantError(m, "The ending value of " + m.getText() + " must be an integer.");}
-
-         env.leaveScope();
-         t = env.getVoidType();
-	 
-	 /* 
-	    Enter a new scope, create, and add code that initializes the
-            index variable to the value of the second expression.
-            Compare the index variable with the second expression and bnz to
-            the end.  Generate code for the third expression, code that
-            increments the index by one, then branch to the beginning. 
-	*/
-	 
-	 
-       }
-     )
-  | "break" { 
-    String breakable = (String) env.vars.get("break viable");
-    
-    if(breakable == null)
-	{semantError(#expr, "Break may only be used from within a while or for loop.");}
-  
-  t = env.getVoidType();
-  
-    /* 
-	Unconditional branch to the innermost loop exit 
-    */
-  }
-  | #( "let"
-       { 
-	env.enterScope(); 
-	r.mark(); 
-	r.enterScope();
-       }
-       #(DECLS
-       ( 
-        
-         #(innerD:DECLS 
-             {  AST ok = innerD.getFirstChild();}
-             (decl[d,r])+ 
-             { 
-		Vector names = new Vector();
-	     
-                while(ok != null)
-                    {
-                    String name = decl2(ok,d,r);
-		    
-		    if(name != null)
-			{names.add(name);}
-		    
-                    ok = ok.getNextSibling();
-                    }
-		
-		for(int google = 0; google < names.size(); google++)
-		    {
-		    String currentName = (String) names.get(google);
-		    
-		    Type checkerType = (Type) env.types.get(currentName);
-		    
-		    if(checkerType instanceof NAME)
-			{
-			NAME nameForm = (NAME) checkerType;
-			NAME next = nameForm;
-			
-			while(next.binding instanceof NAME)
-			    {
-			    if(next.binding == nameForm)
-				{
-				semantError(#expr, currentName + " is not a real type (merely an alias to an alias...., you get the point).");
-				}
-	
-			    next = (NAME) next.binding;
-			    //in while.
-			    }
-			//in if.
-			}
-		    //in for.
-		    }
-             //outside of all loops.
-	     }
-         ))*
+    { 
+      Type selected = (Type) env.types.get(anddie.getText());
+      selected = selected.actual();
+      
+      if(!(selected instanceof ARRAY))
+        {semantError(anddie, anddie.getText() + " is not a valid array type.");}
+      
+      ARRAY canidate = (ARRAY) selected;
+      
+      if(!(a.actual() instanceof Semant.INT))
+        {semantError(anddie, "Array sizes must be integers.");}
+      
+      if(!b.coerceTo(canidate.element))
+        {semantError(anddie, "Cannot initialize an array to a value of a type other than the type of the array.");}
+      
+       t = canidate;
        
-       )
-       a=expr[d,r]
-       {
-         env.leaveScope();
-         t = a;
-	 r.release(); 
-	 r.leaveScope();
-       }
-     )
+       /* Create a new array with an arr statement */
+    }
+    )
+  | #( "if" a=expr[d,r] 
+    {
+      Label ifElse = new Label();
+      Label ifExit = new Label();
+      r.append(new Bz(new LabelOperand(ifElse), d));
+    } b=expr[d,r]
+    {
+      r.append(new Jmp(new LabelOperand(ifExit)))
+       .append(ifElse);
+    } (c=expr[d,r])? )
+    {
+      if (!(a.actual() instanceof Semant.INT))
+        {semantError(#expr, "The predicate of an if statement must be of integer type.");}
+      
+      if (c == null && !(b.actual() instanceof VOID))
+        {semantError(#expr, "The then block of an if statment cannot return a value if there is no else block.");}
+      else if (c != null)
+      {
+        if (c.coerceTo(b))
+          {t = b.actual();}
+        else if (b.coerceTo(c))
+          {t = c.actual();}
+        else
+          {semantError(#expr, "The types of the then and else blocks of an if statement must match.");}
+      }
+      t = b.actual();
+      c = null;
+      r.append(ifExit);
+    }
+  | #( "while"
+    {
+      Label topWhile = new Label();
+      Label bottomWhile = new Label();
+      r.append(topWhile);
+    } a=expr[d,r] 
+    {
+      env.enterScope();
+      env.vars.put("break viable", new LabelOperand(bottomWhile));
+      r.append(new Bz(new LabelOperand(bottomWhile), d));
+    } b=expr[d,r]
+    {
+      if(!(a.actual() instanceof Semant.INT))
+        {semantError(#expr, "The predicate of a while statement must be of integer type.");}
+
+      if(!(b.actual() instanceof VOID))
+        {semantError(#expr, "Foolishly, Tiger does not allow while statements to have a type. May I suggest a do-nothing assignment within the loop to force the value of the body of the while loop to be void?");}
+
+      //added to allow break checking. 
+      env.leaveScope();
+      t = env.getVoidType();
+     
+     r.append(new Jmp(new LabelOperand(topWhile)))
+      .append(bottomWhile);
+    }
+    )
+  | #( "for" m:ID
+    {
+      Label bottomFor = new Label();
+
+      env.enterScope(); 
+      env.vars.put(m.getText(), new VarEntry(env.getIntType())); 
+      env.vars.put("break viable", new LabelOperand(bottomFor));
+      env.vars.put(m.getText() + " isLocked", "true");
+
+      r.enterScope();
+      Operand loopVar = r.newVar(m.getText()); 
+    } a=expr[loopVar,r]
+    {
+      Label topFor = new Label();      
+      r.append(topFor);
+    } b=expr[d,r] 
+    { 
+      r.append(new Binop(Binop.GT, d, loopVar, d))
+       .append(new Bnz(new LabelOperand(bottomFor), d));
+    } c=expr[d,r]
+    { 
+      if(!(a.actual() instanceof Semant.INT))
+        {semantError(m, "The starting value of " + m.getText() + " must be an integer.");}
+
+      if(!(b.actual() instanceof Semant.INT))
+        {semantError(m, "The ending value of " + m.getText() + " must be an integer.");}
+
+      env.leaveScope();
+      t = env.getVoidType();
+      
+      r.append(new Binop(Binop.ADD, loopVar, loopVar, new IntConstant(1)))
+       .append(new Jmp(new LabelOperand(topFor)))
+       .append(bottomFor);
+ 
+      r.leaveScope();
+    }
+    )
+  | "break" 
+    { 
+      LabelOperand breakTo = (LabelOperand) env.vars.get("break viable");
+      
+      if(breakTo == null)
+        {semantError(#expr, "Break may only be used from within a while or for loop.");}
+  
+      t = env.getVoidType();
+      
+      r.append(new Jmp(breakTo));
+    }
+  | #( "let"
+    { 
+      env.enterScope(); 
+      r.mark(); 
+      r.enterScope();
+    }
+      #(DECLS ( 
+        #(innerD:DECLS 
+        {AST ok = innerD.getFirstChild();}
+        (decl[d,r])+ 
+        { 
+          Vector names = new Vector();
+         
+          while(ok != null)
+          {
+            String name = decl2(ok,d,r);
+            
+            if(name != null)
+              {names.add(name);}
+            
+            ok = ok.getNextSibling();
+          }
+          
+          for(int google = 0; google < names.size(); google++)
+          {
+            String currentName = (String) names.get(google);
+            
+            Type checkerType = (Type) env.types.get(currentName);
+            
+            if(checkerType instanceof NAME)
+            {
+              NAME nameForm = (NAME) checkerType;
+              NAME next = nameForm;
+              
+              while(next.binding instanceof NAME)
+              {
+                if(next.binding == nameForm)
+                {
+                  semantError(#expr, currentName + " is not a real type (merely an alias to an alias...., you get the point).");
+                }
+       
+                next = (NAME) next.binding;
+              } //while. 
+            } //if.
+          } //for.
+        } //outside of all loops.
+        )
+      )*)
+      a=expr[d,r]
+      {
+        env.leaveScope();
+        t = a;
+        r.release(); 
+        r.leaveScope();
+      }
+    )
   ;
 
 decl [ Operand d, RecordInfo r ]
@@ -498,7 +516,6 @@ decl [ Operand d, RecordInfo r ]
      )
   ;
 
-
 decl2 [ Operand d, RecordInfo r ] returns [String s = null;]
     { 
     Type a, b;
@@ -509,7 +526,7 @@ decl2 [ Operand d, RecordInfo r ] returns [String s = null;]
        NAME alias = (NAME) env.types.get(y.getText());
        
        if(a == null)
-	    {semantError(y, y.getText() + "Is being assigned an invalid type.");}
+            {semantError(y, y.getText() + "Is being assigned an invalid type.");}
        
        alias.bind(a);
        s = y.getText();
@@ -521,31 +538,31 @@ decl2 [ Operand d, RecordInfo r ] returns [String s = null;]
        a=expr[v,r]
      )
   | #( "function" n:ID FIELDS .
-       { 
-        FunEntry additionalFunction = (FunEntry)env.vars.get(n.getText());
-        RECORD l = additionalFunction.formals;
-        env.enterScope();
+    { 
+      FunEntry additionalFunction = (FunEntry)env.vars.get(n.getText());
+      RECORD l = additionalFunction.formals;
+      env.enterScope();
 
-        while(l != null)
-            {
-            env.vars.put(l.fieldName, new VarEntry(l.fieldType));
-            l = l.tail;
-            }
-       }
-    b=expr[d,r]
-        {
-        env.leaveScope();
-	
-	if(!b.coerceTo(additionalFunction.result))
-	    {semantError(#decl2, "The return type of " + n.getText() + " must match the declared return type of this function.");}
-	    
-	/* 
-	    Start a new activation record, add variables for each of the
-            formal parameters, and generate code for the body, sending
-            the result to fp(-1) if there is one. 
-	*/    
-	
-        }
+      r.enterScope();                  
+      r.append(new Label(n.getText()));
+
+      int argOffset = -1;
+      while(l != null)
+      {
+        env.vars.put(l.fieldName, new VarEntry(l.fieldType));
+        l = l.tail;
+        r.topScope.put(l.fieldName, new Integer(--argOffset));
+      }
+    } b=expr[new FrameRel(-1), r]
+    {
+      env.leaveScope();
+      r.leaveScope();
+      
+      r.append(new RTS());
+    
+      if(!b.coerceTo(additionalFunction.result))
+        {semantError(#decl2, "The return type of " + n.getText() + " must match the declared return type of this function.");}
+    }
     )
   ;
 
@@ -573,8 +590,6 @@ type returns [Type t]
     )
   ;
 
-
-
 fields returns [RECORD rec = null;]: #( FIELDS
     {
     RECORD current = new RECORD("", null, null);
@@ -587,7 +602,7 @@ fields returns [RECORD rec = null;]: #( FIELDS
     current.fieldType = (Type) env.types.get(u.getText());
     
     if(current.fieldType == null)
-	{semantError(m, "Error, undefined field type.");}
+        {semantError(m, "Error, undefined field type.");}
     
     current.tail = new RECORD("", null, null);
     last = current;
