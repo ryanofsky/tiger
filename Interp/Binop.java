@@ -19,8 +19,10 @@ public class Binop extends Statement {
 
     int opcode;
     Operand source1, source2, dest;
+    boolean isString;
 
-    public Binop(int op, Operand d, Operand s1, Operand s2) {
+    public Binop(int op, Operand d, Operand s1, Operand s2, boolean doingStrings) {
+	isString = doingStrings;
 	opcode = op;
 	dest = d;
 	source1 = s1;
@@ -113,4 +115,101 @@ public class Binop extends Statement {
 	return next;
     }
 
+    final static String mipsOpcodes[] =
+    { "add", "sub", "mul", "div", "seq", "sne", "slt", "sle", "sgt", "sge" };
+
+    public String mips() {
+
+	StringBuffer output = new StringBuffer(source1.mipsGet("$t0") + "\n");
+	output.append(source2.mipsGet("$t1") + "\n");
+
+	if(isString)
+	    {
+	    Label branchOut = new Label();
+	    Label branchFalse = new Label();
+	    Label branchRepeat = new Label();
+	    Label branchTrue = new Label();
+	    
+	    String falseTest = null;
+	    
+	    switch(opcode)
+		{
+		case EQU:
+		    falseTest = "bne $t7, $t8, " + branchFalse + "\n";
+		    falseTest += "beqz $t7, " + branchTrue + "\n";
+		    break;
+		case NEQ:
+		    falseTest = "bne $t7, $t8, " + branchTrue + "\n";
+		    falseTest += "beqz $t7, " + branchFalse + "\n";
+		    break;
+		case LT:
+		    falseTest = "bgt $t7, $t8, " + branchFalse + "\n";
+		    falseTest += "blt $t7, $t8, " + branchTrue + "\n";
+		    falseTest += "beqz $t8, " + branchFalse + "\n";
+		    break;
+		case LEQ:
+		    falseTest = "bgt $t7, $t8, " + branchFalse + "\n";
+		    falseTest += "blt $t7, $t8, " + branchTrue + "\n";
+		    falseTest += "beqz $t8, " + branchTrue + "\n";
+		    break;
+		case GT:
+		    falseTest = "blt $t7, $t8, " + branchFalse + "\n";
+		    falseTest += "bgt $t7, $t8, " + branchTrue + "\n";
+		    falseTest += "beqz $t8, " + branchFalse + "\n";
+		    break;
+		case GEQ:
+		    falseTest = "blt $t7, $t8, " + branchFalse + "\n";
+		    falseTest += "bgt $t7, $t8, " + branchTrue + "\n";
+		    falseTest += "beqz $t8, " + branchTrue + "\n";
+		    break;
+		default:
+		    throw new IllegalStateException("Bad opcode: " + opcode);	
+		}
+	    
+	    
+	    output.append(branchRepeat + ":\n");
+	    output.append("li $t2, 0\n");
+	    
+	    //begin the loop.
+	    output.append("lw $t5, $t2($t0)\n");
+	    output.append("lw $t6, $t2($t0)\n");
+	    
+	    output.append("andi $t7, $t5, 0xff000000\n");
+	    output.append("andi $t8, $t6, 0xff000000\n");
+	    output.append(falseTest);
+	    
+	    output.append("andi $t7, $t5, 0xff0000\n");
+	    output.append("andi $t8, $t6, 0xff0000\n");
+	    output.append(falseTest);
+	    
+	    output.append("andi $t7, $t5, 0xff00\n");
+	    output.append("andi $t8, $t6, 0xff00\n");
+	    output.append(falseTest);
+	    
+	    output.append("andi $t7, $t5, 0xff\n");
+	    output.append("andi $t8, $t6, 0xff\n");
+	    output.append(falseTest);
+	    
+	    //now loop again.
+	    output.append("addi $t2, $t2, 4\n");
+	    output.append("b " + branchRepeat + "\n");
+	    
+	    //now for the return statements.
+	    output.append(branchFalse + ":\n");
+	    output.append("li $t0, 0\n");
+	    output.append("b " + branchOut + "\n");
+	    
+	    output.append(branchTrue + ":\n");
+	    output.append("li $t0, 1\n");
+	    
+	    output.append(branchOut + ":\n");
+	    }
+	else
+	    {output.append("  " + mipsOpcodes[opcode] + " $t0, $t0, $t1\n");}
+	    
+	output.append(dest.mipsSet("$t0"));
+	    
+	// FIXME: This doesn't do the right thing for comparing strings
+	return output.toString();
+    }
 }
