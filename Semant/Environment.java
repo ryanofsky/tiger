@@ -1,7 +1,7 @@
 package Semant;
 
 import antlr.collections.AST;
-import TigerTokenTypes;
+//import TigerTokenTypes;
 import java.lang.String;
 
 /// Helper class for creating standard library functions
