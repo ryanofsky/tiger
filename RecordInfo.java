@@ -63,7 +63,7 @@ class RecordInfo {
      */
 
     // Represents scopes for variables within this activation record
-    private class Scope {
+    public class Scope {
 	Scope parent;
 	java.util.Hashtable dict = new java.util.Hashtable();
 
@@ -84,7 +84,7 @@ class RecordInfo {
     }
 
     /// Topmost scope in this activation record
-    private Scope topScope = new Scope();
+    public Scope topScope = new Scope();
 
     /// Enter a new scope
     public void enterScope() { topScope = new Scope(topScope); }
