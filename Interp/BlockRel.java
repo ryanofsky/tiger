@@ -29,4 +29,50 @@ public class BlockRel extends Operand {
 	INT i = (INT)(offset.get(e));
 	b.set(i.value(), o);
     }
+    
+    
+    public String mipsGet(String regName) 
+	{
+	StringBuffer output = new StringBuffer();
+	
+	output.append(offset.mipsSet("$t8"));
+	
+	output.append("addi $sp, $sp, 4\n");
+	output.append("sw $t8, $sp\n");
+	
+	output.append(base.mipsSet("$t9"));
+	
+	output.append("lw $t8, $sp\n");
+	output.append("subi $sp, $sp, 4\n");
+	
+	output.append("lw " + regName + ", $t8($t9)");
+	
+	return output.toString();
+	}
+
+
+
+
+    public String mipsSet(String regName) 
+	{
+	StringBuffer output = new StringBuffer();
+	
+	output.append(offset.mipsSet("$t8"));
+
+	output.append("addi $sp, $sp, 4\n");
+	output.append("sw $t8, $sp\n");
+	
+	output.append(base.mipsSet("$t9"));
+	
+	output.append("lw $t8, $sp\n");
+	output.append("subi $sp, $sp, 4\n");
+	
+	output.append("sw " + regName + ", $t8($t9)\n");
+	
+	return output.toString();
+	}
+    
+    
+    
+    
 }
