@@ -1,8 +1,0 @@
-/* check out operator precedence and associativity */
-(
-  1 = 2 & 2 = 3 + 4;
-  1 + if 2 then 3 else 4 + 5;
-  5 - 4 - 3 - 2 - 1;
-  1 * 2 + 3 / 4;
-  1 + 2 * 3 - 4
-)

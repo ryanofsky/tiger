@@ -1,2 +1,0 @@
-// can parse correctly meaningless stuff allowed by spec
-1 + break / f(let in 8;9;10 end, 11) = um[nil] of 8 + - a{b=c.d+3}
