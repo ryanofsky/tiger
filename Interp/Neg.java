@@ -15,4 +15,14 @@ public class Neg extends Statement {
 	dest.set(e, new INT(-o.value()));
 	return next;
     }
+    
+    public String mips()
+	{
+	StringBuffer output = new StringBuffer(source.mipsGet("$t0"));
+	output.append("neg $t0, $t0\n");
+	dest.mipsSet("$t0");
+	return output.toString();
+	}
+    
+    
 }

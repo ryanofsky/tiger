@@ -22,4 +22,14 @@ public class Bnz extends Statement {
 	    throw new TypeErrorException(string());
 	}
     }
+    
+    
+    public String mips()
+	{
+	StringBuffer output = new StringBuffer(source.mipsGet("$t0"));
+	output.append("bnez $t0, " + target.string() + "\n");
+	return output.toString();
+	}
+
+    
 }
