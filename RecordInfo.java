@@ -36,11 +36,13 @@ class RecordInfo {
      * record.
      */
 
+    public Vector functionArgs = new Vector();
+
     /// Offset for next available stack position
     int tos = 0; 
 
     /// Highest number of stack objects seen so far
-    int max = 0;
+    public int max = 0;
 
     /// Return the size of this activation record (maximum number used)
     public int size() { return max; }
@@ -82,6 +84,9 @@ class RecordInfo {
 
     public void allocateStack()
     {
+      for(int i = 0; i < functionArgs.size(); ++i)
+        ((FrameRel)functionArgs.get(i)).offset += max;
+	
       func.insert(new Psh(max));
       
       int oldMax = 0;
@@ -210,4 +215,11 @@ class RecordInfo {
         // in the symbol tables
         return null;
     }
+    
+    
+    public Object getThing(String input)
+	{return topScope.get(input);}
+	
+    public void putThing(String input, Object thing)
+	{topScope.put(input, thing);}
 }
