@@ -22,10 +22,11 @@ public class Rec extends Statement {
     public String mips()
 	{
 	  StringBuffer output = new StringBuffer();
-	  output.append(dest.mipsGet("$t0") + "\n");
-	  output.append("la $a0, " + size + "\n");
+	  output.append("la $a0, " + (size * 4) + "\n");
 	  output.append("li $v0, 9\n"); // 9 == sbrk
 	  output.append("syscall\n");
+	
+	output.append(dest.mipsSet("$v0") + "\n");
 	  return output.toString();
 	}
 }
