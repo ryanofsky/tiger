@@ -44,15 +44,15 @@ public class Arr extends Statement {
       Label copyTop = new Label();
       
       output.append("move $t0, $v0\n"); // outer loop through array
-      output.append(top.string() + ":\n");
+      output.append(top.mips());
         output.append("move $t1, $zero\n"); // inner loop through words of rec
-        output.append(copyTop.string() + ":\n");
+        output.append(copyTop.mips());
         output.append("load $t2, $t1($t4)\n");
         output.append("addi $v0, $v0, " + sizeOfRec + "\n");
         output.append("sw $t2, $t1($t0)\n");
-        output.append("blt $t1, $t6, " + copyTop + "\n");
+        output.append("blt $t1, $t6, " + copyTop.mipsName() + "\n");
       output.append("addi $t0, $t0, " + sizeOfRec + "\n");
-      output.append("blt $t0, $t7, " + top + "\n");
+      output.append("blt $t0, $t7, " + top.mipsName() + "\n");
 
       output.append(dest.mipsGet("$t0"));
       output.append("sw $v0, $t0"); // save pointer

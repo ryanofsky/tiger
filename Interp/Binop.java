@@ -135,39 +135,39 @@ public class Binop extends Statement {
 	    switch(opcode)
 		{
 		case EQU:
-		    falseTest = "bne $t7, $t8, " + branchFalse + "\n";
-		    falseTest += "beqz $t7, " + branchTrue + "\n";
+		    falseTest = "bne $t7, $t8, " + branchFalse.mipsName() + "\n";
+		    falseTest += "beqz $t7, " + branchTrue.mipsName() + "\n";
 		    break;
 		case NEQ:
-		    falseTest = "bne $t7, $t8, " + branchTrue + "\n";
-		    falseTest += "beqz $t7, " + branchFalse + "\n";
+		    falseTest = "bne $t7, $t8, " + branchTrue.mipsName() + "\n";
+		    falseTest += "beqz $t7, " + branchFalse.mipsName() + "\n";
 		    break;
 		case LT:
-		    falseTest = "bgt $t7, $t8, " + branchFalse + "\n";
-		    falseTest += "blt $t7, $t8, " + branchTrue + "\n";
-		    falseTest += "beqz $t8, " + branchFalse + "\n";
+		    falseTest = "bgt $t7, $t8, " + branchFalse.mipsName() + "\n";
+		    falseTest += "blt $t7, $t8, " + branchTrue.mipsName() + "\n";
+		    falseTest += "beqz $t8, " + branchFalse.mipsName() + "\n";
 		    break;
 		case LEQ:
-		    falseTest = "bgt $t7, $t8, " + branchFalse + "\n";
-		    falseTest += "blt $t7, $t8, " + branchTrue + "\n";
-		    falseTest += "beqz $t8, " + branchTrue + "\n";
+		    falseTest = "bgt $t7, $t8, " + branchFalse.mipsName() + "\n";
+		    falseTest += "blt $t7, $t8, " + branchTrue.mipsName() + "\n";
+		    falseTest += "beqz $t8, " + branchTrue.mipsName() + "\n";
 		    break;
 		case GT:
-		    falseTest = "blt $t7, $t8, " + branchFalse + "\n";
-		    falseTest += "bgt $t7, $t8, " + branchTrue + "\n";
-		    falseTest += "beqz $t8, " + branchFalse + "\n";
+		    falseTest = "blt $t7, $t8, " + branchFalse.mipsName() + "\n";
+		    falseTest += "bgt $t7, $t8, " + branchTrue.mipsName() + "\n";
+		    falseTest += "beqz $t8, " + branchFalse.mipsName() + "\n";
 		    break;
 		case GEQ:
-		    falseTest = "blt $t7, $t8, " + branchFalse + "\n";
-		    falseTest += "bgt $t7, $t8, " + branchTrue + "\n";
-		    falseTest += "beqz $t8, " + branchTrue + "\n";
+		    falseTest = "blt $t7, $t8, " + branchFalse.mipsName() + "\n";
+		    falseTest += "bgt $t7, $t8, " + branchTrue.mipsName() + "\n";
+		    falseTest += "beqz $t8, " + branchTrue.mipsName() + "\n";
 		    break;
 		default:
 		    throw new IllegalStateException("Bad opcode: " + opcode);	
 		}
 	    
 	    
-	    output.append(branchRepeat + ":\n");
+	    output.append(branchRepeat.mips());
 	    output.append("li $t2, 0\n");
 	    
 	    //begin the loop.
@@ -192,17 +192,17 @@ public class Binop extends Statement {
 	    
 	    //now loop again.
 	    output.append("addi $t2, $t2, 4\n");
-	    output.append("b " + branchRepeat + "\n");
+	    output.append("b " + branchRepeat.mipsName() + "\n");
 	    
 	    //now for the return statements.
-	    output.append(branchFalse + ":\n");
+	    output.append(branchFalse.mips());
 	    output.append("li $t0, 0\n");
-	    output.append("b " + branchOut + "\n");
+	    output.append("b " + branchOut.mipsName() + "\n");
 	    
-	    output.append(branchTrue + ":\n");
+	    output.append(branchTrue.mips());
 	    output.append("li $t0, 1\n");
 	    
-	    output.append(branchOut + ":\n");
+	    output.append(branchOut.mips());
 	    }
 	else
 	    {output.append("  " + mipsOpcodes[opcode] + " $t0, $t0, $t1\n");}
