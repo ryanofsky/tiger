@@ -29,11 +29,41 @@ options {
     System.exit(1);
   }
 
-  static void addSystemFunction(RecordInfo r, String name, int index)
+  void addSystemFunction(RecordInfo r, String name, int index, RECORD args, Type returns)
   {
     RecordInfo activationRec = new RecordInfo(name, r);
     activationRec.append(new Sys(index)).append(new Rts());
     r.enterFunc(name, activationRec.func);
+    env.vars.put(name, new FunEntry(args, returns));
+  }
+
+  RECORD arg(Type t)
+  {
+    return new RECORD("", t, null);
+  }
+  
+  RECORD arg(Type t, RECORD next)
+  {
+    return new RECORD("", t, next);
+  }
+  
+  void addSystemFunctions(RecordInfo r)
+  {
+    Type i = env.getIntType();
+    Type v = env.getVoidType();
+    Type s = env.getStringType();
+
+    addSystemFunction(r, "print", Sys.PRINT, arg(s), v);
+    addSystemFunction(r, "printi", Sys.PRINTI, arg(i), v);
+    addSystemFunction(r, "flush", Sys.FLUSH, null, v);
+    addSystemFunction(r, "getchar", Sys.GETCHAR, null, s);
+    addSystemFunction(r, "ord", Sys.ORD, arg(s), i);
+    addSystemFunction(r, "chr", Sys.CHR, arg(i), s);
+    addSystemFunction(r, "size", Sys.SIZE, arg(s), i);
+    addSystemFunction(r, "substring", Sys.SUBSTRING, arg(s, arg(i, arg(i))), s);
+    addSystemFunction(r, "concat", Sys.CONCAT, arg(s, arg(s)), s);
+    addSystemFunction(r, "not", Sys.NOT, arg(i), i);
+    addSystemFunction(r, "exit", Sys.EXIT, arg(i), v);
   }
 }
 
@@ -281,7 +311,7 @@ expr [ Operand d, RecordInfo r ] returns [Type t]
       r.newEnd();
       
       
-    } ( { FrameRel fr = new FrameRel(argCount); r.functionArgs.add(fr); System.out.println("ArgCount: " + argCount);} a=expr[fr,r]
+    } ( { FrameRel fr = new FrameRel(argCount); r.functionArgs.add(fr);} a=expr[fr,r]
     {
       if(jello == null)
           {semantError(z, "Too many arguments for function '" + z.getText() + "' (" + argCount + " expected)");}
@@ -318,7 +348,6 @@ expr [ Operand d, RecordInfo r ] returns [Type t]
 	{throw new IllegalArgumentException("Undeclared function: " + z.getText());}
 
       r.append(new Jsr(func, depth));
-      System.out.println("Depth: " + depth);
       if (retVal != null) r.append(new Mov(d, retVal));
       r.release();
     }
