@@ -190,10 +190,10 @@ expr returns [Type t]
 
         ARRAY canidate = (ARRAY) selected;
 
-        if(!(a instanceof INT))
+        if(!(a.actual() instanceof INT))
             {semantError(anddie, "Array sizes must be integers.");}
 
-        if(!(b.coerceTo(selected))
+        if(!b.coerceTo(selected))
             {semantError(anddie, "Cannot initialize an array to a value of a type other than the type of the array.");}
 
          t = canidate;
