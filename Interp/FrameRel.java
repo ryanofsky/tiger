@@ -5,7 +5,7 @@ package Interp;
 public class FrameRel extends Operand {
 
     // Offset in activation record
-    int offset;
+    public int offset;
 
     public FrameRel(int o) { offset = o; }
 
