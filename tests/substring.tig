@@ -1,0 +1,1 @@
+print(substring("hello world", 6, 10))
