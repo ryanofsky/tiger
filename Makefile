@@ -1,9 +1,14 @@
 #JAVAC_OPTIONS = -classpath /u/4/c/cs4115/antlr:.
-#JAVAC_OPTIONS = -classpath ../antlr/:./
+JAVAC_OPTIONS = -classpath ../antlr/:./
 
-#TEST_CASES = merge.tig queens.tig test1.tig test2.tig test3.tig test4.tig test5.tig test6.tig test7.tig test8.tig test9.tig test10.tig test11.tig test12.tig test13.tig test14.tig test15.tig test16.tig test17.tig test18.tig test19.tig test20.tig test21.tig test22.tig test23.tig test24.tig test25.tig test26.tig test27.tig test28.tig test29.tig test30.tig test31.tig test32.tig test33.tig test34.tig test35.tig test36.tig test37.tig test38.tig test39.tig test40.tig test41.tig test42.tig test43.tig test44.tig test45.tig test46.tig test47.tig test48.tig test49.tig
 
 #TEST_CASES = error1.tig error2.tig error3.tig error4.tig error5.tig error6.tig error7.tig error8.tig error9.tig error10.tig error11.tig error12.tig error13.tig error14.tig error15.tig error16.tig error17.tig error18.tig error19.tig error20.tig error21.tig error22.tig error23.tig error24.tig error25.tig error26.tig error27.tig error28.tig error29.tig error30.tig error31.tig error32.tig error33.tig error34.tig error35.tig error36.tig error37.tig error26a.tig
+
+#TEST_CASES = test.tig
+
+TEST_CASES = array_1.tig   exprifthen.tig             funcMutualRec.tig          print-simple.tig array_2types.tig           exprifthenelse.tig         funcParameters.tig         print.tig array_comp.tig             exprnestifthenelse.tig     funcProcSimple.tig         printi.tig array_ofArr.tig            exprnestifthenelse2.tig    funcRecursive.tig          record_1.tig array_record.tig           exprnestwhile.tig          funcRedefined.tig          record_array.tig binop_1.tig                exprwhile.tig              funcSimple.tig             record_nil.tig binop_lazy.tig             exprwhile2.tig             getchar.tig                record_ofRec.tig binop_lazy1.tig            funcForwardDecl.tig        let_inner.tig              size.tig chr.tig                    funcGlobal.tig             let_outer.tig              string_1.tig concat.tig                 funcGlobalLocal.tig        not.tig                    string_comp.tig exprfor.tig                funcGlobalLocalFunc.tig    ord.tig                    substring.tig exprfor2.tig               funcLocal.tig              print-add.tig
+
+
 
 SEMANT_IN = TigerTranslate.g
 SEMANT_JAVA = TigerTranslate.java TigerTranslateTokenTypes.java
@@ -33,4 +38,9 @@ clean :
 test : $(TEST_CASES)
 
 $(TEST_CASES) : all
-	-java $(JAVAC_OPTIONS) TC ./errors/$@
+	-java $(JAVAC_OPTIONS) TI ./tests/$@
+
+
+
+
+
