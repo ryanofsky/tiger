@@ -6,6 +6,8 @@ header {
   import Semant.VarEntry;
   import Semant.FunEntry;
 
+    import java.util.Vector;
+
   import Semant.*;
 }
 
@@ -18,6 +20,8 @@ options {
 
 {
   Environment env = new Environment();
+
+    boolean isReadOnly = false;
 
   void semantError(LineAST a, java.lang.String s) {
     System.err.println(a.getLine() + ":" + s);
@@ -34,6 +38,12 @@ lvalue returns [Type t]
         semantError(i, "Undefined identifier " + i.getText());
       if ( !(e instanceof VarEntry) )
         semantError(i, i.getText() + " is not a variable");
+	
+    if(env.vars.get(i.getText() + " isLocked") != null)
+	{isReadOnly = true;}
+    else
+	{isReadOnly = false;}
+
       VarEntry v = (VarEntry) e;
       t = v.ty;
     }
@@ -42,7 +52,7 @@ lvalue returns [Type t]
     
     a = a.actual();
     
-    if(!(a instanceof RECORD))
+    if(!(a.actual() instanceof RECORD))
         {semantError(#lvalue, #lvalue.getText() + " is not a record.");}
 
     RECORD d = (RECORD) a;
@@ -60,17 +70,19 @@ lvalue returns [Type t]
             }
         }
 
+    isReadOnly = false;
     t = d.fieldType;
     }
   | #( SUBSCRIPT a=lvalue b=expr)
     { /* Verify lvalue is an array type and expr is an int */
-    if(!(a instanceof ARRAY))
+    if(!(a.actual() instanceof ARRAY))
         {semantError(#lvalue, "This is not an array: " + a);}
 
-    if(!(b instanceof INT))
+    if(!(b.actual() instanceof INT))
         {semantError(#lvalue, "Array indices must be integers");}
 
-    t = ((ARRAY) a).element;
+    isReadOnly = false;
+    t = ((ARRAY) a.actual()).element;
     }
   ;
 
@@ -82,7 +94,7 @@ expr returns [Type t]
   | NUMBER { t = env.getIntType(); }
   | #( NEG a=expr
        { /* Verify expr is an int */
-           if ( !(a instanceof Semant.INT))
+           if ( !(a.actual() instanceof Semant.INT))
                 semantError(#expr, "Operand of unary minus must be integer");
            t = env.getIntType();
        }
@@ -97,22 +109,27 @@ expr returns [Type t]
               op.equals("|") ||
               op.equals("&")              
               ) {
-             if (!(a instanceof Semant.INT) ||
-                 !(b instanceof Semant.INT))
+             if (!(a.actual() instanceof Semant.INT) ||
+                 !(b.actual() instanceof Semant.INT))
                  semantError(#expr, "operands of " + op + " must be integer");
              t = a;
          } else { // op is one of: = > < <> >= <=
             if(!b.coerceTo(a) && !a.coerceTo(b))
                 {semantError(#expr, "operands of " + op + " must be of the same type.");}
 
-            if(a instanceof VOID)
+            if(a.actual() instanceof VOID)
                 {semantError(#expr, "operands of " + op + " cannot be applied to void types.");}
 
             t = env.getIntType();
          }
        }
      )
-  | #( ASSIGN a=lvalue b=expr
+  | #( ASSIGN {isReadOnly = false;} a=lvalue 
+	{
+	if(isReadOnly)
+	    {semantError(#expr, "You cannot assign to a read only variable.");}
+	}
+    b=expr
        { /* Verify the lvalue's type matches the expr's type */
 
         if(!b.coerceTo(a))
@@ -159,23 +176,39 @@ expr returns [Type t]
   | #( SEQ { t = env.getVoidType(); } (t=expr)*
        { /* Return the type of the last expression or nil */ }
     )
-  | #( RECORD fuckoff:ID (#(FIELD g:ID a=expr))*
+  | #( RECORD fuckoff:ID 
+    {
+    Type recType = (Type) env.types.get(fuckoff.getText());
+    
+    if (recType == null)
+	{ semantError(#expr, "Undefined type: " + fuckoff.getText()); }
+    
+    if(!(recType.actual() instanceof RECORD))
+	{semantError(#expr, fuckoff.getText() + " is not a valid name for a record.");}
+    
+    RECORD ourRec = (RECORD) recType.actual();
+    } 
+    (#(FIELD g:ID a=expr)
+	{
+	if(ourRec == null)
+	    {semantError(#expr, "You have assigned to more fields than this record has in its definition.");}
+	
+	if(!ourRec.fieldName.equals(g.getText()))
+	    {semantError(#expr, "The field names given in the initialization of this record don't match the field types in its declaration.");}
+    
+	if(!a.coerceTo(ourRec.fieldType))
+	    {semantError(#expr, "The type of the value assigned to " + ourRec.fieldName + " does not match the declared type of the field.");}
+    
+	ourRec = ourRec.tail;
+	}
+    )*
        { /* Verify ID is a record type and that the listed fields match those
             of the record type */
-        /*
-        Type Rec = env.types.get(fuckoff.getText());
-
-        if(Rec == null || !(Rec instanceof RECORD))
-            {semantError(fuckoff, fuckoff.getText() + " is not a valid type.");}
-        */
-
-         Type recType = (Type)env.types.get(fuckoff.getText());
-         if (recType == null)
-             { semantError(#expr, "Undefined type: " + fuckoff.getText()); }
-         t = recType.actual();
-         
-         // XXX: ensure that fields are all set (and ordered correctly)
-         
+	
+	if(ourRec != null)
+	    {semantError(#expr, "You must assign to all of the record's fields.");} 
+	    
+	t = recType;
        }
      )
   | #( NEWARRAY anddie:ID a=expr b=expr
@@ -193,7 +226,7 @@ expr returns [Type t]
         if(!(a.actual() instanceof INT))
             {semantError(anddie, "Array sizes must be integers.");}
 
-        if(!b.coerceTo(selected))
+        if(!b.coerceTo(canidate.element))
             {semantError(anddie, "Cannot initialize an array to a value of a type other than the type of the array.");}
 
          t = canidate;
@@ -203,10 +236,10 @@ expr returns [Type t]
        { /* Verify the first expr is an int, that the second, if alone, is
             nothing, and the second and third match if there's a third */
 
-        if (!(a instanceof INT))
+        if (!(a.actual() instanceof INT))
             {semantError(#expr, "The predicate of an if statement must be of integer type.");}
 
-        if (c == null && !(b instanceof VOID))
+        if (c == null && !(b.actual() instanceof VOID))
             {semantError(#expr, "The then block of an if statment cannot return a value if there is no else block.");}
         else if (c != null)
             {
@@ -224,55 +257,99 @@ expr returns [Type t]
         c = null;
        }
      )
-  | #( "while" a=expr b=expr
+  | #( "while" a=expr {env.enterScope(); env.vars.put("break viable", "true"); } b=expr
        { /* Verify the first expr is an int and that the second is nothing */
 
-        if(!(a instanceof INT))
+        if(!(a.actual() instanceof INT))
             {semantError(#expr, "The predicate of a while statement must be of integer type.");}
 
-       if(!(b instanceof VOID))
+       if(!(b.actual() instanceof VOID))
             {semantError(#expr, "Foolishly, Tiger does not allow while statements to have a type. May I suggest a do-nothing assignment within the loop to force the value of the body of the while loop to be void?");}
 
-         t = env.getVoidType();
+
+	 
+	 //added to allow break checking. 
+	 env.leaveScope();
+	t = env.getVoidType();
        }
      )
-  | #( "for" m:ID a=expr b=expr { env.enterScope(); env.vars.put(m.getText(), new VarEntry(env.getIntType())); } c=expr
+  | #( "for" m:ID a=expr b=expr 
+	{ 
+	env.enterScope(); 
+	env.vars.put(m.getText(), new VarEntry(env.getIntType())); 
+	env.vars.put("break viable", "true");
+	env.vars.put(m.getText() + " isLocked", "true");
+	} c=expr
        { /* Verify the first and second expressions are ints, define the ID as
             an int for the third, and verify its type is empty in a new scope.
          */
 
-         if(!(a instanceof INT))
+         if(!(a.actual() instanceof INT))
             {semantError(m, "The starting value of " + m.getText() + " must be an integer.");}
 
-         if(!(b instanceof INT))
+         if(!(b.actual() instanceof INT))
             {semantError(m, "The ending value of " + m.getText() + " must be an integer.");}
 
          env.leaveScope();
-
          t = env.getVoidType();
        }
      )
-  | "break" { t = env.getVoidType(); }
+  | "break" { 
+    String breakable = (String) env.vars.get("break viable");
+    
+    if(breakable == null)
+	{semantError(#expr, "Break may only be used from within a while or for loop.");}
+  
+  t = env.getVoidType();
+  }
   | #( "let"
        { env.enterScope(); }
        #(DECLS
        ( 
         
          #(innerD:DECLS 
-             {  
-                System.out.println("entering declaration group");
-                AST ok = innerD.getFirstChild();
-             }
+             {  AST ok = innerD.getFirstChild();}
              (decl)+ 
              { 
-                System.out.println("leaving declaration group");
+		Vector names = new Vector();
+	     
                 while(ok != null)
                     {
-                    decl2(ok);
+                    String name = decl2(ok);
+		    
+		    if(name != null)
+			{names.add(name);}
+		    
                     ok = ok.getNextSibling();
-                    // XXX: check for loopy types
                     }
-             }
+		
+		for(int google = 0; google < names.size(); google++)
+		    {
+		    String currentName = (String) names.get(google);
+		    
+		    Type checkerType = (Type) env.types.get(currentName);
+		    
+		    if(checkerType instanceof NAME)
+			{
+			NAME nameForm = (NAME) checkerType;
+			NAME next = nameForm;
+			
+			while(next.binding instanceof NAME)
+			    {
+			    if(next.binding == nameForm)
+				{
+				semantError(#expr, currentName + " is not a real type (merely an alias to an alias...., you get the point).");
+				}
+	
+			    next = (NAME) next.binding;
+			    //in while.
+			    }
+			//in if.
+			}
+		    //in for.
+		    }
+             //outside of all loops.
+	     }
          ))*
        
        )
@@ -290,7 +367,6 @@ decl
     }
   : #( "type" y:ID
        { /* Add the given type to the current scope */
-        System.out.println("  adding type " + y.getText());
         String text = y.getText();
         NAME alias = new NAME(text);  
         env.types.put(text, alias);
@@ -300,16 +376,14 @@ decl
        { /* Verify the type of the expression matches the given type
             if non-nil, and add the var declaration to the current scope */
 
-        if(a != null && !b.getClass().isInstance(a))
+        if(a != null && !b.coerceTo(a))
             {semantError(i, "You cannot place a value of one type in a variable of an incompatible type.");}
 
         env.vars.put(i.getText(), new VarEntry(b));
-        System.out.println("  adding variable " + i.getText());
        }
      )
   | #( "function" n:ID {RECORD l;} l=fields (a=type | "nil" { a = null; } )
           {
-          System.out.println("  adding function " + n.getText());
           if(a == null)
               {a = env.getVoidType();}
           FunEntry additionalFunction = new FunEntry(l, a);
@@ -318,31 +392,25 @@ decl
      )
   ;
 
-////
 
-decl2
+decl2 returns[String s = null;]
     { Type a, b;
     a = null;
     }
   : #( "type" y:ID a=type
        { /* Add the given type to the current scope */
-       System.out.println("  second pass type " + y.getText());
        NAME alias = (NAME) env.types.get(y.getText());
        alias.bind(a);
+       s = y.getText();
        }
      )
   | "var"
-       {
-        System.out.println("  second pass variable ");
-       }
-     
   | #( "function" n:ID FIELDS .
        { 
          /* Verify the arguments are actually types, enter the
             function in the current scope, start a new scope, add the formal
             parameters, check the body, and leave the scope */
 
-        System.out.println("  second pass function " + n.getText());
         FunEntry additionalFunction = (FunEntry)env.vars.get(n.getText());
         RECORD l = additionalFunction.formals;
         env.enterScope();
@@ -356,12 +424,13 @@ decl2
     b=expr 
         {
         env.leaveScope();
-        // XXX: make sure type of b matches return type
+	
+	if(!b.coerceTo(additionalFunction.result))
+	    {semantError(#decl2, "The return type of " + n.getText() + " must match the declared return type of this function.");}
         }
     )
   ;
 
-////
 
 type returns [Type t]
     {
