@@ -156,7 +156,7 @@ expr [ Operand d, RecordInfo r ] returns [Type t]
     {
       t = p.type;
       Mov abc = new Mov(d,p.operand);
-      System.out.println("adding mov: " + abc.string());
+      System.out.println("# adding mov: " + abc.string());
       r.append(abc);
     }
   | s:STRING
