@@ -1,0 +1,27 @@
+<SEQ>
+ <NUMBER>3</NUMBER>
+ <BINOP o="+">
+  <NUMBER>4</NUMBER>
+  <NUMBER>5</NUMBER>
+ </BINOP>
+ <CALL>
+  <ID>q</ID>
+  <NUMBER>6</NUMBER>
+  <NUMBER>7</NUMBER>
+ </CALL>
+ <SUBSCRIPT>
+  <ID>r</ID>
+  <NUMBER>4</NUMBER>
+ </SUBSCRIPT>
+ <FIELD>
+  <ID>s</ID>
+  <ID>t</ID>
+ </FIELD>
+ <FIELD>
+  <SUBSCRIPT>
+   <ID>u</ID>
+   <ID>v</ID>
+  </SUBSCRIPT>
+  <ID>x</ID>
+ </FIELD>
+</SEQ>

@@ -1,0 +1,42 @@
+<BINOP o="=">
+ <BINOP o="+">
+  <NUMBER>1</NUMBER>
+  <BINOP o="/">
+   <break/>
+   <CALL>
+    <ID>f</ID>
+    <let>
+     <DECLS/>
+     <SEQ>
+      <NUMBER>8</NUMBER>
+      <NUMBER>9</NUMBER>
+      <NUMBER>10</NUMBER>
+     </SEQ>
+    </let>
+    <NUMBER>11</NUMBER>
+   </CALL>
+  </BINOP>
+ </BINOP>
+ <NEWARRAY>
+  <ID>um</ID>
+  <nil/>
+  <BINOP o="+">
+   <NUMBER>8</NUMBER>
+   <NEG>
+    <RECORD>
+     <ID>a</ID>
+     <FIELD>
+      <ID>b</ID>
+      <BINOP o="+">
+       <FIELD>
+        <ID>c</ID>
+        <ID>d</ID>
+       </FIELD>
+       <NUMBER>3</NUMBER>
+      </BINOP>
+     </FIELD>
+    </RECORD>
+   </NEG>
+  </BINOP>
+ </NEWARRAY>
+</BINOP>
