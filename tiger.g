@@ -5,84 +5,69 @@ options {
     buildAST = true;
 }
 
-file : stmt EOF!;
+file : expr EOF!;
 
-stmt:
-    BREAK
-    | IF expr THEN stmt ( options {greedy=true;} : ELSE stmt)?
-    | WHILE expr DO stmt
-    | FOR ID ASSIGN expr TO expr DO stmt
-    | LPAREN expr_seq RPAREN
-    | ID LCURLY field_list RCURLY
-//    | ID LBRACE expr RBRACE OF expr
-    | LET decl_list IN expr_seq END
-    | expr
+      
+expr: (ID array_index "of") => ID array_index "of" expr  // array type defn
+    | ID LCURLY field_list RCURLY                        // record type defn
+    | expr1                                              // binary expression
+    | "if" expr "then" expr ( options {greedy=true;} : "else" expr)? 
+    | "for" ID ASSIGN expr "to" expr "do" expr           
+    | "while" expr "do" expr                             
+    | "break"
+    | "let" decl_list "in" expr_seq "end"
     ;
 
+// todo: after eating a binary operator, $setType to BINOP
+expr1: expr2 ((AND | OR) expr2)*;
+expr2: expr3 ((EQ | GT | LT | NE | GTE | LTE) expr3)?;
+expr3: expr4 ((PLUS | DASH) expr4)*;
+expr4: atom ((STAR | SLASH) atom)*;
 
-expr: lvalue (ASSIGN expr)?
-    | DASH expr
-    | ID LPAREN expr_list RPAREN
-    | term4
-    ;
-
-term4: term3 (logical_ops term3)*;
-
-term3: term2 (compare_ops term2)*;
-
-term2: term ((PLUS | DASH) term)*;
-
-term: atom ((STAR | SLASH) atom)*;
-
-atom: STRING
+atom: "nil"
     | INTEGER
-    | NIL
-    | LPAREN! term4 RPAREN!
+    | STRING
+    | DASH atom
+    | LPAREN expr_seq RPAREN         
+    | ID LPAREN (expr_list)? RPAREN // function call
+    | lvalue
     ;
 
-lvalue : (ID ((LBRACE expr RBRACE) | (DOT ID))+);
-
-logical_ops
-    : AND
-    | OR
-    ;
-
-compare_ops
-    : EQ
-    | GT
-    | LT
-    | NE
-    | GTE
-    | LTE
-    ;
-
-expr_seq
-    : stmt (SCOLON stmt)+
-    ;
+lvalue:
+  ID (array_index | (DOT ID))*; // lvalue
 
 expr_list
     : expr (COMMA expr)+
     ;
 
+expr_seq
+    : expr (SCOLON expr)*
+    ;
+
+array_index
+    : LBRACE expr RBRACE
+    ;
 
 field_list
     : ID EQ expr (COMMA ID EQ expr)*
     ;
 
-
 decl_list
     : (decl)+
     ;
 
-decl: type_decl
-    | var_decl
+decl: var_decl
+    | type_decl
     | func_decl
     ;
 
-type_decl
-    : ID
-    | LCURLY type_fields RCURLY
-    | ARRAY OF ID
+var_decl
+    : "var" ID ASSIGN expr
+    | "var" ID COLON ID ASSIGN expr
+    ;
+
+func_decl
+    : "function" ID LPAREN type_fields RPAREN (COLON ID)? EQ expr
     ;
 
 type_fields
@@ -93,13 +78,13 @@ type_field
     : ID COLON ID
     ;
 
-var_decl
-    : VAR ID ASSIGN expr
-    | VAR ID COLON ID ASSIGN expr
+type_decl
+    : "type" ID EQ type
     ;
-
-func_decl
-    : FUNCTION ID LPAREN type_fields RPAREN (COLON ID)? EQ expr
+    
+type: ID
+    | LCURLY type_fields RCURLY
+    | "array" "of" ID
     ;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -109,32 +94,6 @@ func_decl
 class TigerLexer extends Lexer;
 options {
   k=2;
-}
-
-tokens
-{
-    // loop keywords
-    FOR      = "for";
-    WHILE    = "while";
-    BREAK    = "break";
-    DO       = "do";
-    END      = "end";
-
-    // conditional keywords
-    IF       = "if";
-    ELSE     = "else";
-    THEN     = "then";
-
-    // other keywords
-    ARRAY    = "array";
-    FUNCTION = "function";
-    IN       = "in";
-    LET      = "let";
-    NIL      = "nil";
-    OF       = "of";
-    TO       = "to";
-    TYPE     = "type";
-    VAR      = "var";
 }
 
 protected
@@ -152,7 +111,12 @@ options {testLiterals=true;}
         ;
 
 INTEGER : (DIGIT)+;
-STRING  : '"' ( "\\\"" | ~'"') '"';
+STRING
+options {testLiterals=true;}
+        : '"' ( "\\\"" | ~'"') '"'
+        ;
+
+// todo: handle string escape sequences with $setText(x) $getText() 
 
 // binary operators
 PLUS    : '+'  { System.out.println ("Found:" + text); };
