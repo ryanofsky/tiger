@@ -37,21 +37,18 @@ public class BlockRel extends Operand {
 	
 	output.append(offset.mipsSet("$t8"));
 	
-	output.append("addi $sp, $sp, 4\n");
+	output.append("subi $sp, $sp, 4\n");
 	output.append("sw $t8, $sp\n");
 	
 	output.append(base.mipsSet("$t9"));
 	
 	output.append("lw $t8, $sp\n");
-	output.append("subi $sp, $sp, 4\n");
+	output.append("addi $sp, $sp, 4\n");
 	
 	output.append("lw " + regName + ", $t8($t9)");
 	
 	return output.toString();
 	}
-
-
-
 
     public String mipsSet(String regName) 
 	{
@@ -59,20 +56,16 @@ public class BlockRel extends Operand {
 	
 	output.append(offset.mipsSet("$t8"));
 
-	output.append("addi $sp, $sp, 4\n");
+	output.append("subii $sp, $sp, 4\n");
 	output.append("sw $t8, $sp\n");
 	
 	output.append(base.mipsSet("$t9"));
 	
 	output.append("lw $t8, $sp\n");
-	output.append("subi $sp, $sp, 4\n");
+	output.append("addi $sp, $sp, 4\n");
 	
 	output.append("sw " + regName + ", $t8($t9)\n");
 	
 	return output.toString();
 	}
-    
-    
-    
-    
 }
