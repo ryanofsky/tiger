@@ -1,8 +1,0 @@
-let
-  type r = { x : int }
-  var a : r := nil
-  var b : string := "Hello There"
-  var c := 5
-in
-  -5
-end
