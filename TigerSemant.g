@@ -262,7 +262,7 @@ expr returns [Type t]
              (decl)+ 
              { 
                 System.out.println("leaving declaration group");
-                decl(ok);
+                decl2(ok);
              }
          ))*
        
@@ -325,6 +325,28 @@ decl
   ;
 
 ////
+
+decl2
+    { Type a, b;
+    a = null;
+    }
+  : #( "type" y:ID a=type
+       { /* Add the given type to the current scope */
+        System.out.println("  second pass type " + y.getText());
+       }
+     )
+  | #( "var" i:ID (a=type | "nil") b=expr
+       {
+        System.out.println("  second pass variable " + i.getText());
+       }
+     )
+  | #( "function" {RECORD l;} n:ID l=fields (a=type | "nil" { a = null; } )
+       { 
+        System.out.println("  second pass function " + n.getText());
+       }
+    b=expr
+    )
+  ;
 
 ////
 
