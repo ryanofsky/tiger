@@ -26,7 +26,7 @@ expr
   | #( "while" expr expr )
   | #( "for" ID expr expr expr )
   | "break"
-  | #( "let" #(DECLS #(DECLS (decl)+ ) ) expr )
+  | #( "let" #(DECLS (#(DECLS (decl)+ ))* ) expr )
   ;
 
 decl
