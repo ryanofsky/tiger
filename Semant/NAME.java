@@ -4,7 +4,7 @@ import java.lang.String;
 
 public class NAME extends Type {
     public String name;
-    private Type binding;
+    public Type binding;
 
     public NAME(String n) { name=n; }
 
