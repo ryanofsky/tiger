@@ -73,7 +73,7 @@ class TI {
 		    System.out.println("--------------------------------------------\nExecuting Program...\n");
 
 		    // Execute the program
-		    r.func.executeAll(false);
+		    r.func.executeAll(true);
 		}
 
 	    } catch (antlr.TokenStreamRecognitionException e) {
