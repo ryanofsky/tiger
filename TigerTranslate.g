@@ -283,9 +283,11 @@ expr [ Operand d, RecordInfo r ] returns [Type t]
     }
     b=expr[p.operand,r]
     {
+	/*
       if(!b.coerceTo(p.type))
           {semantError(#expr, "Cannot assign a value of one type to a variable of a different type.");}
-      t = env.getVoidType();
+	*/
+        t = env.getVoidType();
     }
     )
   | #( CALL z:ID
@@ -424,7 +426,25 @@ expr [ Operand d, RecordInfo r ] returns [Type t]
        /* Create a new array with an arr statement */
        
        Operand value = d;
-       r.append(new Arr(d, size, value));
+       
+       int intSize;
+       
+	if(b.actual() instanceof Semant.RECORD)
+	    {
+	    intSize = 4;
+	 
+	    RECORD ourRec = (RECORD) b.actual();
+	 
+	    while(ourRec.tail != null)
+		{
+		ourRec = ourRec.tail;
+		intSize += 4;
+		}
+	    }
+	else
+	    {intSize = 0;}
+       
+       r.append(new Arr(d, size, value, intSize));
     }
     )
   | #( "if" 
@@ -682,8 +702,7 @@ decl2 [ Operand d, RecordInfo r ] returns [String s = null;]
 
       activationRec.append(new Rts());
       activationRec.allocateStack();
-	System.out.println("Declaring function: " + n.getText());
-      r.enterFunc((n.getText()).trim(), activationRec.func);
+	System.out.println("#Declaring function: " + n.getText());
       
     }
     )
