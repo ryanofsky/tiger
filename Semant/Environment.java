@@ -57,6 +57,8 @@ public class Environment {
 
 	new Builtin("print").arg("s", stringType).returns(voidType)
 	    .enter(vars);
+	new Builtin("printi").arg("i", intType).returns(voidType)
+	    .enter(vars);
 	new Builtin("flush").returns(voidType).enter(vars);
 	new Builtin("getchar").returns(stringType).enter(vars);
 	new Builtin("ord").arg("s", stringType).returns(intType).enter(vars);
