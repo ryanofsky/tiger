@@ -1,8 +1,0 @@
-Programming Assignment 3: Interpreter
-
-To compile:
-
-$ java antlr.Tool TigerTranslate.g
-$ javac TI.java
-$ java TI
-
