@@ -22,6 +22,7 @@ options {
   Environment env = new Environment();
 
     boolean isReadOnly = false;
+    
 
   void semantError(LineAST a, java.lang.String s) {
     System.err.println(a.getLine() + ":" + s);
@@ -140,11 +141,6 @@ expr returns [Type t]
      )
   | #( CALL z:ID
         {
-
-        /*
-            must fix to allow for mutually recursive functions.
-        */
-
         if(env.vars.get(z.getText()) == null)
             {semantError(z, "undefined function " + z.getText());}
 
@@ -400,6 +396,10 @@ decl2 returns[String s = null;]
   : #( "type" y:ID a=type
        { /* Add the given type to the current scope */
        NAME alias = (NAME) env.types.get(y.getText());
+       
+       if(a == null)
+	    {semantError(y, y.getText() + "Is being assigned an invalid type.");}
+       
        alias.bind(a);
        s = y.getText();
        }
@@ -438,9 +438,7 @@ type returns [Type t]
         t = env.getVoidType();
     }
   : k:ID
-    {
-    t = (Type) env.types.get(k.getText());
-    }
+    {t = (Type) env.types.get(k.getText());}
   | q = fields
     {
     t = q;
@@ -469,6 +467,10 @@ fields returns [RECORD rec = null;]: #( FIELDS
     {
     current.fieldName = m.getText();
     current.fieldType = (Type) env.types.get(u.getText());
+    
+    if(current.fieldType == null)
+	{semantError(m, "Error, undefined field type.");}
+    
     current.tail = new RECORD("", null, null);
     last = current;
     current = current.tail;
