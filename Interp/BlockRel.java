@@ -35,16 +35,22 @@ public class BlockRel extends Operand {
 	{
 	StringBuffer output = new StringBuffer();
 	
-	output.append(offset.mipsSet("$t8") + "\n");
+	output.append("# mips get in Block Rel.\n");
+	
+	output.append(offset.mipsGet("$t8") + "\n");
 	
 	output.append("li $s0, 4\n");
 	output.append("sub $sp, $sp, $s0\n");
 	output.append("sw $t8, 0($sp)\n");
 	
-	output.append(base.mipsSet("$t9") + "\n");
+	output.append(base.mipsGet("$t9") + "\n");
 	
 	output.append("lw $t8, 0($sp)\n");
 	output.append("addi $sp, $sp, 4\n");
+	
+	//new addition.
+	output.append("li $s1, 4\n");
+	output.append("mul $t8, $t8, $s1\n");
 	
 	output.append("add $s0, $t8, $t9\n");
 	output.append("lw " + regName + ", 0($s0)");
@@ -55,17 +61,24 @@ public class BlockRel extends Operand {
     public String mipsSet(String regName) 
 	{
 	StringBuffer output = new StringBuffer();
-	
-	output.append(offset.mipsSet("$t8") + "\n");
+    
+	output.append("# mips set in Block Rel.\n");
+    
+	output.append("#offset data: " + offset.string() + "\n");
+	output.append(offset.mipsGet("$t8") + "\n");
 
 	output.append("li $s0, 4\n");
 	output.append("sub $sp, $sp, $s0\n");
 	output.append("sw $t8, 0($sp)\n");
 	
-	output.append(base.mipsSet("$t9") + "\n");
+	output.append(base.mipsGet("$t9") + "\n");
 	
 	output.append("lw $t8, 0($sp)\n");
 	output.append("addi $sp, $sp, 4\n");
+	
+	//new addition.
+	output.append("li $s1, 4\n");
+	output.append("mul $t8, $t8, $s1\n");
 	
 	output.append("add $s0, $t8, $t9\n");
 	output.append("sw " + regName + ", 0($s0)\n");
