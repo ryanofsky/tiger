@@ -15,4 +15,9 @@ public class Mov extends Statement {
 	dest.set(e, o);
 	return next;
     }
+
+    public String mips() {
+	// Load the operand into $t0, then save it
+	return source.mipsGet("$t0") + "\n" + dest.mipsSet("$t0");
+    }
 }

@@ -19,4 +19,6 @@ public class Label extends Statement {
 
     /// Do nothing; return the next statement
     public Statement execute(Environment e) { return next; }
+
+    public String mips() { return name + ":"; }
 }

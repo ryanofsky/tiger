@@ -13,4 +13,10 @@ public abstract class Operand {
 
     /// Return a textual representation of the operand
     public String string() { return "<unknown operand>"; }
+   
+    /// Return code that places the operand in the given MIPS register
+    public String mipsGet(String reg) { return "<illegal operand>"; }
+
+    /// Return code that writes the given MIPS register into the operand
+    public String mipsSet(String reg) { return "<illegal operand>"; }
 }

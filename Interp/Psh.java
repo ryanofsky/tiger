@@ -13,4 +13,8 @@ public class Psh extends Statement {
 	e.stack.adjust(size);
 	return next;
     }
+
+    public String mips() {
+	return "  subu $sp, " + Integer.toString(size*4, 10);
+    }
 }
