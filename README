@@ -2,7 +2,14 @@ Program 4
 
 Most of the work on our compiler was done on implementing the tiger standard library functions and on the filling in the missing methods in the java classes representing statements and operands.
 
-The standard library functions are basically just long strings just long strings of mips assembly code. The java code in Sys.java builds up these strings and a loop in TC.java prints them out. The implementations were pretty straightforward. The print(), printi(), getchar(), flush(), and exit() implementations invoke mips syscalls. The not() function uses mips arithmetic. The rest of the functions are string functions. Since there is no support for manipulating strings in mips assembly, they have to manipulate characters, allocating memory and looping as neccessary.
+The standard library functions are basically just long strings just long strings of mips assembly code. The java code in Sys.java builds up these strings and a loop in TC.java prints them out. The implementations were pretty straightforward. The print(), printi(), getchar(), flush(), and exit() implementations invoke mips syscalls. The not() function uses mips arithmetic. The rest of the functions are string functions. Since there is no support for manipulating strings in mips assembly, they have to manipulate characters, allocating memory and looping as neccessary.  For example our concat algorithm first count the size of each strings through two separate loops, allocates the memory, and then first copy the first string, then the second.
+
+Since all string comparison require similar algorithm, we have made a template for string comparison which parameterizes for null testing and individual charactor comparison.  It is just a loop from the beginning to the end comparing character by character.
+
+Rec:  We calculated the size of the record in terms of bytes.  Then we use the system call the allocate the space needed for the heap.  
+
+Arr:  For arrays, we calculate the size using different methods depending on if the array is of records or of strings.  We then loop through the elements of the array.  If the members are of permanent types, we just copy the value passed to the Arr statement into each element.  If the elements are records, we then have an inner loop which copies each of the words of the protype record into the array.
+
 
 
 
