@@ -3,21 +3,11 @@
 
 $fileName = $ARGV[0];
 
-$results = `spim -file $fileName 2> results.out`; 
+$results = `spim -file $fileName`; 
 
-
-
-open(RESFILE, "<results.out");
-@theLines = <RESFILE>;
-close(RESFILE);
-
-$totalOutput = "";
-
-foreach $line (@theLines)
-{$totalOutput .= $line;}
-
-$totalOutput =~ s|.*/sw/share/spim//trap\.handler||i;
-print "$totalOutput\n\n";
+$results =~ s/\n//gi;
+$results =~ s|.*/sw/share/spim//trap\.handler||i;
+print "$results\n";
 
 
 
