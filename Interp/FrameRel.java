@@ -21,13 +21,22 @@ public class FrameRel extends Operand {
 	e.stack.set(offset, o);
     }
 
-    public String mipsGet(String reg) {
-	return "  lw " + reg + ", " +
-	    Integer.toString( -4*offset-(offset>=0?12:0)) + "($fp)";
+    public String mipsGet(String reg) 
+	{
+	StringBuffer output = new StringBuffer("#In FrameRel mipsGet\n");
+	
+	output.append("  lw " + reg + ", ");
+	output.append(Integer.toString( -4*offset-(offset>=0?12:0)) + "($fp)");
+	
+	return output.toString();
     }
 
-    public String mipsSet(String reg) {
-	return "  sw " + reg + ", " +
-	    Integer.toString( -4*offset-(offset>=0?12:0)) + "($fp)";
+    public String mipsSet(String reg) 
+	{
+	StringBuffer output = new StringBuffer("#In FrameRel mipsSet\n");
+	output.append("  sw " + reg + ", ");
+	output.append(Integer.toString( -4*offset-(offset>=0?12:0)) + "($fp)");
+	
+	return output.toString();
     }
 }
