@@ -1,0 +1,26 @@
+// $ANTLR 2.7.1: TigerASTGram.g -> TigerTokenTypes.txt$
+Tiger    // output token vocab name
+ID=4
+FIELD=5
+SUBSCRIPT=6
+LITERAL_nil="nil"=7
+STRING=8
+NUMBER=9
+NEG=10
+BINOP=11
+ASSIGN=12
+CALL=13
+SEQ=14
+RECORD=15
+NEWARRAY=16
+LITERAL_if="if"=17
+LITERAL_while="while"=18
+LITERAL_for="for"=19
+LITERAL_break="break"=20
+LITERAL_let="let"=21
+DECLS=22
+LITERAL_type="type"=23
+LITERAL_var="var"=24
+LITERAL_function="function"=25
+LITERAL_array="array"=26
+FIELDS=27
