@@ -1,5 +1,7 @@
 TEST_CASES = comments decl_group expr_seq lvalues minus nil_types op_order queens spec_stuff string_literals
 
+JAVA_OPTIONS = -classpath /u/4/c/cs4115/antlr:.
+
 ANTLR_IN = tiger.g
 ANTLR_JAVA = TigerLexer.java TigerParserTokenTypes.java TigerParser.java
 ANTLR_CLASSES = TigerLexer.class TigerParserTokenTypes.class TigerParser.class
@@ -21,24 +23,24 @@ clean : testclean
 test : $(TEST_CASES)
 	
 $(TEST_CASES) : all
-	java Tig2xml ./tests/$@.tig > ./tests_out/$@.xml
+	java $(JAVA_OPTIONS) Tig2xml ./tests/$@.tig > ./tests_out/$@.xml
 	diff -w ./tests_out/$@.xml ./tests_canon/$@.xml
 
 testclean :
 	-rm ./tests_out/*.xml
 
 $(ANTLR_JAVA) $(ANTLR_CRUFT): $(ANTLR_IN) $(AST_CRUFT)
-	java antlr.Tool $(ANTLR_IN) 
+	java $(JAVA_OPTIONS) antlr.Tool $(ANTLR_IN) 
 
 $(ANTLR_CLASSES) : $(ANTLR_JAVA)
-	javac $(ANTLR_JAVA)
+	javac $(JAVA_OPTIONS) $(ANTLR_JAVA)
 
 $(AST_JAVA) $(AST_CRUFT): $(AST_IN)
-	java antlr.Tool $(AST_IN) 
+	java $(JAVA_OPTIONS) antlr.Tool $(AST_IN) 
 
 $(AST_CLASSES) : $(AST_JAVA)
-	javac $(AST_JAVA)
+	javac $(JAVA_OPTIONS) $(AST_JAVA)
 
 $(MISC_CLASSES) : $(MISC_JAVA) $(ANTLR_CLASSES)
-	javac $(MISC_JAVA)
+	javac $(JAVA_OPTIONS) $(MISC_JAVA)
 
