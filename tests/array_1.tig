@@ -1,0 +1,9 @@
+let
+	type arrtype = array of int
+	var arr := arrtype [3] of 0
+in
+	arr[0] := 1;
+	arr[2] := 5;
+	printi(arr[2])
+end
+
