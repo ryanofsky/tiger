@@ -36,7 +36,19 @@ class Tig2xml {
     for (int i = 0 ; i < indent ; i++) o.print(" ");
     String value = a.getText();
     int ttype = a.getType();
-    String tokenName = TigerTokenText.tokenNames[ttype];
+    
+    String tokenName = null;
+    
+    try
+        { tokenName = TigerTokenText.tokenNames[ttype];}
+    catch(ArrayIndexOutOfBoundsException e)
+        {
+         System.out.println("Bad Index: " + ttype);
+         System.out.println("Max Size: " + TigerTokenText.tokenNames.length);
+         System.out.println("Here's what it doesn't like: " + value);
+            
+         throw e;   
+        }
 
     o.print("<" + tokenName);
     if (ttype == TigerTokenTypes.ID || ttype == TigerTokenTypes.STRING ||
