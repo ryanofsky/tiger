@@ -1,0 +1,7 @@
+/* MG. Test whether the parameters are passed in the right order. */
+let
+	function func(i1:int, i2:int, i3:int):int =
+          i1*100 + i2*10 + i3
+in
+ 	printi(func(1,2,3)) /* Should print: 123 */
+end

@@ -1,0 +1,10 @@
+/* MG. Access to a local variable. */
+let
+  function get_4():int = 
+  let var four:=4
+  in
+    four
+  end
+in
+  printi(get_4())
+end

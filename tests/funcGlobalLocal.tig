@@ -1,0 +1,7 @@
+/* MG. A local hiding a global with the same name. */
+let
+        var a:int := 1
+	function foo(a:int) = printi(a)
+in
+ 	foo(2)
+end
