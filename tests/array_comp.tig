@@ -1,0 +1,9 @@
+let
+        type arrtype = array of int
+        var arr1 := arrtype [3] of 0
+	var arr2 := arrtype [3] of 5
+in
+       if (arr1 = arr2)
+	then print("yes")
+	else print("no")
+end

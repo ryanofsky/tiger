@@ -1,0 +1,12 @@
+let
+
+type rectype1 = {a:int, b:string}
+type rectype2 = {c:int, d:rectype1}
+var rec2 :rectype2 := nil
+
+in
+
+rec2 := rectype2 {c=10, d=rectype1{a = 5, b = "aparna"}};
+print(rec2.d.b)
+end
+

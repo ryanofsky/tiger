@@ -1,0 +1,9 @@
+let
+        type arrtype = array of int
+	type arrtype2 = array of arrtype
+        var arr := arrtype2 [5] of arrtype [5] of 6
+in
+        arr[3][3] := 1;
+        printi(arr[3][3])
+end
+

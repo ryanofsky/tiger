@@ -1,0 +1,10 @@
+let
+        var i1 := 23
+        var i2 := 34
+in
+        if (i1 = i2) | (i2 <> 23) 
+        then
+                print("yes")
+        else
+                print("no")
+end

@@ -1,0 +1,15 @@
+let
+   var n1:=1
+in   
+   let
+      var n2:=2
+   in
+ 	let
+	  var n3 := 3
+	in
+	  printi(n1)
+   
+	end
+    end
+end
+

@@ -1,0 +1,14 @@
+let 
+
+type rectype1 = {name:string, address:string, id: int , age: int}
+type arrtype2 = array of rectype1
+
+var arr2  := arrtype2 [5] of rectype1 {name="aname", address="somewhere", id=0, age=0}
+
+in
+
+arr2[1].age := 23;
+printi(arr2[1].age)
+
+end
+

@@ -1,0 +1,9 @@
+let
+	type rectype = {name:string, id: int}
+
+	var rec := rectype {name="aname", id=0}
+in
+	rec.id := 8;
+	printi(rec.id)
+end
+
