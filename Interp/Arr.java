@@ -32,7 +32,7 @@ public class Arr extends Statement {
       output.append(size.mipsGet("$t7") + "\n");
       output.append("addi $t6, $zero, " + sizeOfRec + "\n"); // $t6 = sizeOfRec
       
-      output.append("multi $a0, $t7," + sizeOfRec + "\n"); // find total length
+      output.append("mul $a0, $t7, $t6\n"); // find total length
       output.append("li $v0, 9\n"); // 9 == sbrk
       output.append("syscall\n");
       output.append("add $t7, $a0, $v0\n"); // address of last word in array + 1
@@ -47,15 +47,23 @@ public class Arr extends Statement {
       output.append(top.mips());
         output.append("move $t1, $zero\n"); // inner loop through words of rec
         output.append(copyTop.mips());
-        output.append("load $t2, $t1($t4)\n");
+	
+	output.append("add $s0, $t1, $t4\n");
+	output.append("lw $t2, 0($s0)\n");
+	
+        //output.append("lw $t2, $t1($t4)\n");
         output.append("addi $v0, $v0, " + sizeOfRec + "\n");
-        output.append("sw $t2, $t1($t0)\n");
+	
+	output.append("add $s0, $t1, $t0\n");
+	output.append("lw $t2, 0($s0)\n");
+	
+        //output.append("sw $t2, $t1($t0)\n");
         output.append("blt $t1, $t6, " + copyTop.mipsName() + "\n");
       output.append("addi $t0, $t0, " + sizeOfRec + "\n");
       output.append("blt $t0, $t7, " + top.mipsName() + "\n");
 
       output.append(dest.mipsGet("$t0") + "\n");
-      output.append("sw $v0, $t0"); // save pointer
+      output.append("sw $v0, 0($t0)"); // save pointer
 
       return output.toString();
     }
