@@ -1,14 +1,14 @@
 Programming Assignment 2: Static Semantics
 
-To compile:
+Programming Assignment 2: Static Semantics
 
-$ java antlr.Tool TigerSemant.g
-$ javac TC.java
-$ java TC
-1 + 2
-^D
-$ java TC
-1 + break
-^D
-1:operands of + must be integer
-$
+We followed the directions.
+
+As far as we know, everything works as described on the problem set.  We made a test case "error" file for each error message our compiler is capable of producing and our compiler does produce the approriate error messages.  We have also tested all 51 of Appel's test cases and our compiler produced the approriate responses.  We have two directories for test programs.  The test directory contains two test programs which are correct.  The error directory contains 38 programs which are incorrect, and together they will produce all our compiler error messages.
+
+
+The way detected a break was properly nexted- whenever we detected a a "for" or "while" statement, we enter a new scope, set a local variable with an invalid name so that it will not collide with the user variables.  Then when we find the break, we made sure that the break enabling local variable is set indicating that we're within a loop.  When we leave the loop, we leave the scope, and so the variable is removed from the table.
+
+Recusive function and type definitions:  We made two passes of the parser over each declaration block.  In the first pass, we enter new type names, and function signatures into the symbol tables.  In the second pass, we parse the function bodies and added the type definitions.  So at the end of two passes, all entries should be correct.  We follow each new type alias until we either find a defined type or the return to alias we started from.  In the latter case, we have found a loop and produce an error. 
+
+
