@@ -15,8 +15,8 @@ SEMANT_JAVA = TigerTranslate.java TigerTranslateTokenTypes.java
 SEMANT_CLASSES = TigerTranslate.class TigerTranslateTokenTypes.class
 SEMANT_CRUFT = TigerTranslateTokenTypes.txt
 
-COMPILER_JAVA = TI.java TigerParserTokenTypes.java LValue.java  TigerTokenTypes.java
-COMPILER_CLASSES = TI.class TigerParserTokenTypes.class LValue.class TigerTokenTypes.class
+COMPILER_JAVA = TC.java TigerParserTokenTypes.java TigerTokenTypes.java LValue.java
+COMPILER_CLASSES = TC.class TigerParserTokenTypes.class TigerTokenTypes.class LValue.class
 
 all : semant compiler
 
@@ -38,7 +38,7 @@ clean :
 test : $(TEST_CASES)
 
 $(TEST_CASES) : all
-	-java $(JAVAC_OPTIONS) TI ./tests/$@
+	-java $(JAVAC_OPTIONS) TC ./tests/$@
 
 
 
