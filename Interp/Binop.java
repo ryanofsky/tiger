@@ -95,10 +95,10 @@ public class Binop extends Statement {
 		int comparison = v1.compareTo(v2);
 		boolean result = false;
 		switch (opcode) {
-		case LT: result = comparison < 0;
-		case LEQ: result = comparison <= 0;
-		case GT: result = comparison > 0;
-		case GEQ: result = comparison >= 0;
+		case LT: result = comparison < 0; break;
+		case LEQ: result = comparison <= 0; break;
+		case GT: result = comparison > 0; break;
+		case GEQ: result = comparison >= 0; break;
 		}
 		dest.set(e, new INT(result ? 1 : 0));
 	    } else
@@ -112,4 +112,5 @@ public class Binop extends Statement {
 
 	return next;
     }
+
 }
