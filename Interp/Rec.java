@@ -15,5 +15,17 @@ public class Rec extends Statement {
 	dest.set(e, b);
 	return next;
     }    
-
+    
+    
+    
+    
+    public String mips()
+	{
+	  StringBuffer output = new StringBuffer();
+	  output.append(dest.mipsGet("$t0"));
+	  output.append("la $a0, " + size + "\n");
+	  output.append("li $v0, 9\n"); // 9 == sbrk
+	  output.append("syscall\n");
+	  return output.toString();
+	}
 }

@@ -13,4 +13,8 @@ public class Jmp extends Statement {
     public Statement execute(Environment e) {
 	return target.value();
     }
+    
+    public String mips()
+	{return "j " + target.string() + "\n";}
+    
 }
