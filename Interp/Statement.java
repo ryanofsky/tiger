@@ -42,4 +42,15 @@ public abstract class Statement {
 	    System.exit(1);
 	}
     }
+
+    /// Return text for MIPS instructions that implement this statement
+    public String mips() { return "# Unknown statement " + string(); }
+
+    public void printMips() {
+	for ( Statement s = this ; s != null ; s = s.next ) {
+	    System.out.println("#" + s.string());
+	    System.out.println(s.mips());
+	}
+    }
+
 }

@@ -33,4 +33,22 @@ public class Sys extends Statement {
        
 	return next;
     }
+
+    public String mips() {
+	switch (number) {
+	case PRINT:
+	    return
+		"  lw $a0, 4($fp) # Get the string's address\n" +
+		"  li $v0, 4      # code for print_string\n" +
+		"  syscall";
+
+	case PRINTI:
+	    return
+		"  lw $a0, 4($fp) # Get the string's address\n" +
+		"  li $v0, 1      # code for print_integer\n" +
+		"  syscall";
+	}
+
+	return "# not handled";
+    }
 }

@@ -26,4 +26,23 @@ public class StackLinks extends FrameRel {
     public void set(Environment e, TigerObj o) throws InterpException {
 	offsetRecord(e).set(offset, o);
     }
+
+    public String mipsGet(String reg) {
+	return links(reg) +
+	    "  lw " + reg + ", " +
+	    Integer.toString(-4*offset-(offset>=0?12:0)) + "(" + reg + ")";
+    }
+
+    public String mipsSet(String reg) {
+	return links(reg) +
+	    "  sw " + reg + ", " +
+	    Integer.toString( -4*offset-(offset>=0?12:0)) + "(" + reg + ")";
+    }
+
+    String links(String reg) {
+	String l = "  mov " + reg + ", $fp\n";
+	for ( int i = 0 ; i < depth ; i++ )
+	    l = l + "  lw " + reg + ", -4(" + reg + ")\n";
+	return l;
+    }
 }

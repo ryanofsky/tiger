@@ -113,4 +113,16 @@ public class Binop extends Statement {
 	return next;
     }
 
+    final static String mipsOpcodes[] =
+    { "add", "sub", "mul", "div", "seq", "sne", "slt", "sle", "sgt", "sge" };
+
+    public String mips() {
+
+	// FIXME: This doesn't do the right thing for comparing strings
+	return
+	    source1.mipsGet("$t0") + "\n" +
+	    source2.mipsGet("$t1") + "\n" +
+	    "  " + mipsOpcodes[opcode] + " $t0, $t0, $t1\n" +
+	    dest.mipsSet("$t0");
+    }
 }

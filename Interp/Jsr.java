@@ -25,4 +25,17 @@ public class Jsr extends Statement {
 	return dest.value();
     }
 
+    public String mips() {
+
+	String links;
+
+	// Generate code that puts the proper static link into a0.
+	// Follow as many static links as given by the depth.
+
+	links = "  move $a0, $fp\n";
+	for ( int i = 0 ; i < depth ; i++ )
+	    links = links + "  lw $a0, -4($a0)\n";
+	return links + "  jal " + dest.string();
+    }
+
 }

@@ -3,6 +3,8 @@ import Interp.FrameRel;
 import Interp.StackLinks;
 import Interp.Statement;
 import Interp.Label;
+import Interp.Ent;
+import Interp.Psh;
 
 /// Maintains information about what is stored in an activation record
 class RecordInfo {
@@ -16,14 +18,17 @@ class RecordInfo {
     /// Append a statement to the function being built for this record
     public Statement append(Statement s) { return func.append(s); }
 
-    public RecordInfo(String name) {
-	parent = null;
-	func = new Label(name);
-    }
 
     public RecordInfo(String name, RecordInfo p) {
 	parent = p;
 	func = new Label(name);
+	func.append(new Ent());
+    }
+
+    public RecordInfo(String name) {
+	parent = null;
+	func = new Label(name);
+	func.append(new Ent());
     }
 
     /*
@@ -34,12 +39,6 @@ class RecordInfo {
     /// Offset for next available stack position
     int tos = 0; 
 
-    /// Highest number of stack objects seen so far
-    int max = 0;
-
-    /// Return the size of this activation record (maximum number used)
-    public int size() { return max; }
-
     /// Stack of top-of-stack values for enter/leave
     java.util.Stack markStack = new java.util.Stack();
 
@@ -47,13 +46,17 @@ class RecordInfo {
     public void mark() { markStack.push(new Integer(tos)); }
 
     /// Restore the tos to that of the most recent mark() operation
-    public void release() { tos = ((Integer)(markStack.pop())).intValue(); }
+    public void release() {
+	int lasttos = tos;
+	tos = ((Integer)(markStack.pop())).intValue();
+	if (lasttos > tos) func.append(new Psh(tos-lasttos));
+    }
 
     /// Return an operand pointing the next available space on the stack
     public Operand newTmp() {
 	FrameRel op = new FrameRel(tos);
+	func.append(new Psh(1));
 	tos++;
-	if ( tos > max ) max = tos;
 	return op;
     }
 

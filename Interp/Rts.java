@@ -16,4 +16,12 @@ public class Rts extends Statement {
 	return n;
     }
 
+    public String mips() {
+	return
+	    "  move $sp, $fp     # Restore sp\n" +
+	    "  lw   $fp, -8($sp) # Restore fp\n" +
+	    "  lw   $ra, -0($sp) # Restore ra\n" +
+	    "  jr   $ra          # Return to caller";
+    }
+
 }

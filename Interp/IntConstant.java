@@ -7,4 +7,8 @@ public class IntConstant extends Operand {
     public TigerObj get(Environment e) { return new INT(v); }
 
     public String string() { return Integer.toString(v,10); }
+
+    public String mipsGet(String reg) {
+	return "  li " + reg + ", " + Integer.toString(v,10);
+    }
 }

@@ -65,7 +65,7 @@ expr [ Operand d, RecordInfo r ]
             the beginning. */ } )
   | #( "for" ID expr[d,r] expr[d,r] expr[d,r]
        { /* Enter a new scope, create, and add code that initializes the
-            index variable to the value of the second expression.
+            index variable to the value of the first expression.
             Compare the index variable with the second expression and bnz to
             the end.  Generate code for the third expression, code that
             increments the index by one, then branch to the beginning. */ } )
