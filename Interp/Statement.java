@@ -1,7 +1,7 @@
 package Interp;
 
 public abstract class Statement {
-    Statement next = null;
+    public Statement next = null;
     /// Return a textual representation of this statement
     public String string() { return "<unknown statement>"; }
 
