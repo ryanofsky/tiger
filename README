@@ -1,0 +1,14 @@
+Programming Assignment 2: Static Semantics
+
+To compile:
+
+$ java antlr.Tool TigerSemant.g
+$ javac TC.java
+$ java TC
+1 + 2
+^D
+$ java TC
+1 + break
+^D
+1:operands of + must be integer
+$
