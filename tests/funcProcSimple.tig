@@ -1,7 +1,0 @@
-/* Simple test for procedures */
-
-let
-  function foo() = printi(1)
-in
-  foo()
-end

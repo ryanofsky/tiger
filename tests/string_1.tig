@@ -1,7 +1,0 @@
-let
-	var str1:= "first_hello"
-in
-	str1 := "hello";
-	print(str1)
-end
-

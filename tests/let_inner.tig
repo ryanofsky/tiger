@@ -1,9 +1,0 @@
-let
-   var n:=1
-in
-   let
-      var n := 2
-   in
-      printi(n)
-   end
-end

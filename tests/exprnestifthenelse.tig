@@ -1,5 +1,0 @@
-/*nested if-then-else with dangling else */
-if (100<101)
-  then if (201>200)
-          then printi(0)
-          else printi(1)

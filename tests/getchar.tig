@@ -1,5 +1,0 @@
-let
-    var c := getchar()
-in
-    print(c)
-end

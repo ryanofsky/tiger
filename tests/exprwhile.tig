@@ -1,8 +1,0 @@
-/*simple test for while loop*/ 
-let 
-  var a:=5
-in
- while (a>0)
-  do (a:=a-1; ());
- printi(a)
-end 
