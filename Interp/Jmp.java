@@ -15,6 +15,6 @@ public class Jmp extends Statement {
     }
     
     public String mips()
-	{return "j " + target.string() + "\n";}
+	{return "j " + target.value().mipsName() + "\n";}
     
 }

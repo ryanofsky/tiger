@@ -29,7 +29,7 @@ public class Bz extends Statement {
     public String mips()
 	{
 	StringBuffer output = new StringBuffer(source.mipsGet("$t0") + "\n");
-	output.append("beqz $t0, " + target.string() + "\n");
+	output.append("beqz $t0, " + target.value().mipsName() + "\n");
 	return output.toString();
 	}
     
