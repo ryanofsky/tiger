@@ -18,9 +18,9 @@ public class Neg extends Statement {
     
     public String mips()
 	{
-	StringBuffer output = new StringBuffer(source.mipsGet("$t0"));
+	StringBuffer output = new StringBuffer(source.mipsGet("$t0") + "\n");
 	output.append("neg $t0, $t0\n");
-	dest.mipsSet("$t0");
+	output.append(dest.mipsSet("$t0") + "\n");
 	return output.toString();
 	}
     

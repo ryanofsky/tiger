@@ -207,7 +207,7 @@ public class Binop extends Statement {
 	else
 	    {output.append("  " + mipsOpcodes[opcode] + " $t0, $t0, $t1\n");}
 	    
-	output.append(dest.mipsSet("$t0"));
+	output.append(dest.mipsSet("$t0") + "\n");
 	    
 	// FIXME: This doesn't do the right thing for comparing strings
 	return output.toString();

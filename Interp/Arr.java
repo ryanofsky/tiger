@@ -29,7 +29,7 @@ public class Arr extends Statement {
       int sizeOfRec = 4;
       StringBuffer output = new StringBuffer("# Arr::mips() begin\n");
 
-      output.append(size.mipsGet("$t7"));
+      output.append(size.mipsGet("$t7") + "\n");
       output.append("addi $t6, $zero, " + sizeOfRec + "\n"); // $t6 = sizeOfRec
       
       output.append("multi $a0, $t7," + sizeOfRec + "\n"); // find total length
@@ -37,7 +37,7 @@ public class Arr extends Statement {
       output.append("syscall\n");
       output.append("add $t7, $a0, $v0\n"); // address of last word in array + 1
       
-      output.append(src.mipsGet("$t4"));
+      output.append(src.mipsGet("$t4") + "\n");
 
       
       Label top = new Label();
@@ -54,7 +54,7 @@ public class Arr extends Statement {
       output.append("addi $t0, $t0, " + sizeOfRec + "\n");
       output.append("blt $t0, $t7, " + top.mipsName() + "\n");
 
-      output.append(dest.mipsGet("$t0"));
+      output.append(dest.mipsGet("$t0") + "\n");
       output.append("sw $v0, $t0"); // save pointer
 
       return output.toString();
