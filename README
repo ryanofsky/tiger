@@ -1,0 +1,38 @@
+Testing front end:
+
+  - running "make test" will parse test cases in the tests/ folder, store the xml output in the tests_out/ folder and compare that output (using diff) to the correct output in the tests_canon/ folder. If any of the diffs fails, make will halt and display an error message. Otherwise, it will list the commands running and not display any errors.  
+  
+  About our testing procedure:
+  
+  We started writing test cases during debugging. As we fixed errors we saved our test cases so we could run them later and be sure that we did not introduce new errors during development. The test cases that we used are all small and mostly straightforward. The comments test case checks for nested comments and interactions between single line and multiline comments. The decl_group case checks to see that adjacent function, variable, and type declarations will be grouped under the same DECLS nodes. expr_seq tests parsing of expression sequences, that the expressions in the sequence are parsed correctly and that the tree structure of the sequence is correct. lvalues checks that FIELD and SUBSCRIPT specifications nest properly and that lvalues work in assign statements. Minus tests the precedence of the unary minus operator. nil_types checks that the tree output of functions with no specified return types and of variables with no declared types do not omit "nil" placeholders. op_order checks precedence of binary operators. queens is just test program provided by the instructor. It is tested against the xml output. spec_stuff attempts to verify that we did not make any assumptions about the programming language that were not in the spec. It is a nonsensical tiger program with parses correctly in conformance with the spec. string_literals tests the various string escape sequences.
+  
+    After debugging and running on our own set of test programs, we ran our parser on the file queens.tig and produced output that matched exactly the output from the FAQ page. We also ran our parser on the 50 tiger test programs at http://www.cs.princeton.edu/~appel/modern/testcases/ . The only places where it gave errors was where the programs that used empty expression sequences "( )" which are illegal according to our specification.
+    
+Nested comments:
+
+  We dealt with nested comments by using a recursive rule. The rule says that the only things allowed between /* and */ are either nested comments or strings which do not contain "*/". 
+  
+Syntax Errors:
+ 
+  We do not really do any additional error checking. One thing we did, though, which helps with syntax errors is to keep track of newlines in the lexer so that antlr error messages will display the right line numbers. We did add some exception handling code to tig2xml during development which gave some additional helpful information but the file was restored as per the submission instructions.
+  
+Parsing sequence of like declarations:
+
+  This was simple. We made rules for variables, types, and definitions that looked for one or more declarations. We set option greedy = true for those rules and added tree building code which put the declarations underneath a DECLS token.
+  
+Distinguishing between array variable declaration (1) and array access (2):
+
+  The first usage is always followed by an "of" keyword. The second usage is never followed by an "of" keyword. We made a syntactic predicate that would only attempt to match the first case when it was followed by an "of".
+  
+Dangling else problem:
+
+  Solved by making "else" an optional part of an if statement using the ? operator and by setting "greedy" to "true".
+  
+Operator precedence and BINOP trees:
+
+  We turned trees headed by PLUS, DASH, STAR, SLASH, ... tokens into trees headed by BINOP tokens by using the setType command in actions for matches of these tokens. Operator precedence was achieved by making expression rules for the highest precedence operators and then referencing those rules to find matches for lower precedence operator expressions.
+  
+Strings containing keywords:
+
+  We used the testLiterals=false; option for our lexer so it would never look for literals in any rule unless we explicitly told it to. The only rule that we enabled testLiterals for was the one for identifiers. This worked because all the literals used for the tiger language either 1) match the rule for identifiers like "if" "for" "do"  or 2) are only two characters long like "<>" or ">=" or "//" so that they are completely within the lookahead range.
+  
