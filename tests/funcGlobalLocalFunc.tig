@@ -1,0 +1,16 @@
+/* MG. Two functions, one local and one non-local, have the same name. 
+   Have to make sure the right one is picked. */
+
+let 
+  function func_a():int = 1
+  function func_b() = 
+    let 
+      function func_a():int = 2
+    in
+      printi(func_a())
+    end
+
+in
+  func_b()
+end
+      

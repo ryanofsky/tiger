@@ -1,0 +1,11 @@
+/* MG. Declaration of two functions with the same name, but not in the
+   same sequence of function declarations. */
+
+let
+        function func(a:int):int = a
+        var i:int := 0
+        function func(a:int):int = -a
+in
+        i := 2;
+        printi(func(i)) /* -2 */
+end

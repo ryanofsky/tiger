@@ -1,0 +1,9 @@
+/* MG. Access/modifty a non-local variable. */
+let
+        var a:int := 0
+	function modify_a() = (a := 2)
+in
+        a:=1;
+ 	modify_a();
+        printi(a)
+end

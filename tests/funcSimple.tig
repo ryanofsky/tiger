@@ -1,0 +1,9 @@
+/* MG. Test if functions are implemented. */
+
+let 
+  function five():int = 5
+  var a:int := 0
+in
+  a:=five();
+  printi(a)
+end
