@@ -39,6 +39,9 @@ lvalue returns [Type t]
     }
   | #( FIELD a=lvalue m:ID )
     { /* Verify lvalue is of record type with ID as a field */
+    
+    a = a.actual();
+    
     if(!(a instanceof RECORD))
         {semantError(#lvalue, #lvalue.getText() + " is not a record.");}
 
@@ -139,7 +142,7 @@ expr returns [Type t]
         if(jello == null)
             {semantError(z, "Too many arguments for function '" + z.getText() + "' (" + argCount + " expected)");}
 
-        if(a != jello.fieldType)
+        if(!a.coerceTo(jello.fieldType))
             {semantError(z, "Argument " + (argCount + 1) + " for function '" + z.getText() + "' has the wrong type.");}
 
         jello = jello.tail;
@@ -180,6 +183,7 @@ expr returns [Type t]
             second matches the type of the array */
 
         Type selected = (Type) env.types.get(anddie.getText());
+        selected = selected.actual();
 
         if(!(selected instanceof ARRAY))
             {semantError(anddie, anddie.getText() + " is not a valid array type.");}
@@ -189,7 +193,7 @@ expr returns [Type t]
         if(!(a instanceof INT))
             {semantError(anddie, "Array sizes must be integers.");}
 
-        if(!(b.getClass().isInstance(canidate.element)))
+        if(!(b.coerceTo(selected))
             {semantError(anddie, "Cannot initialize an array to a value of a type other than the type of the array.");}
 
          t = canidate;
@@ -262,7 +266,12 @@ expr returns [Type t]
              (decl)+ 
              { 
                 System.out.println("leaving declaration group");
-                decl2(ok);
+                while(ok != null)
+                    {
+                    decl2(ok);
+                    ok = ok.getNextSibling();
+                    // XXX: check for loopy types
+                    }
              }
          ))*
        
@@ -279,13 +288,12 @@ decl
     { Type a, b;
     a = null;
     }
-  : #( "type" y:ID a=type
+  : #( "type" y:ID
        { /* Add the given type to the current scope */
         System.out.println("  adding type " + y.getText());
-        if(a == null)
-            {semantError(y, "You cannot declare a null type.");}
-
-        env.types.put(y.getText(), a);
+        String text = y.getText();
+        NAME alias = new NAME(text);  
+        env.types.put(text, alias);
        }
      )
   | #( "var" i:ID (a=type | "nil") b=expr
@@ -299,29 +307,15 @@ decl
         System.out.println("  adding variable " + i.getText());
        }
      )
-  | #( "function" {RECORD l;} n:ID l=fields (a=type | "nil" { a = null; } )
-       { /* Verify the arguments are actually types, enter the
-            function in the current scope, start a new scope, add the formal
-            parameters, check the body, and leave the scope */
-        System.out.println("  adding function " + n.getText());
-        if(a == null)
-            {a = env.getVoidType();}
-
-        FunEntry additionalFunction = new FunEntry(l, a);
-        env.vars.put(n.getText(), additionalFunction);
-        env.enterScope();
-
-        while(l != null)
-            {
-            env.vars.put(l.fieldName, new VarEntry(l.fieldType));
-            l = l.tail;
-            }
-       }
-
-    b=expr
-
-        {env.leaveScope();}
-    )
+  | #( "function" n:ID {RECORD l;} l=fields (a=type | "nil" { a = null; } )
+          {
+          System.out.println("  adding function " + n.getText());
+          if(a == null)
+              {a = env.getVoidType();}
+          FunEntry additionalFunction = new FunEntry(l, a);
+          env.vars.put(n.getText(), additionalFunction);
+          }
+     )
   ;
 
 ////
@@ -332,19 +326,38 @@ decl2
     }
   : #( "type" y:ID a=type
        { /* Add the given type to the current scope */
-        System.out.println("  second pass type " + y.getText());
+       System.out.println("  second pass type " + y.getText());
+       NAME alias = (NAME) env.types.get(y.getText());
+       alias.bind(a);
        }
      )
-  | #( "var" i:ID (a=type | "nil") b=expr
+  | "var"
        {
-        System.out.println("  second pass variable " + i.getText());
+        System.out.println("  second pass variable ");
        }
-     )
-  | #( "function" {RECORD l;} n:ID l=fields (a=type | "nil" { a = null; } )
+     
+  | #( "function" n:ID FIELDS .
        { 
+         /* Verify the arguments are actually types, enter the
+            function in the current scope, start a new scope, add the formal
+            parameters, check the body, and leave the scope */
+
         System.out.println("  second pass function " + n.getText());
+        FunEntry additionalFunction = (FunEntry)env.vars.get(n.getText());
+        RECORD l = additionalFunction.formals;
+        env.enterScope();
+
+        while(l != null)
+            {
+            env.vars.put(l.fieldName, new VarEntry(l.fieldType));
+            l = l.tail;
+            }
        }
-    b=expr
+    b=expr 
+        {
+        env.leaveScope();
+        // XXX: make sure type of b matches return type
+        }
     )
   ;
 
