@@ -1,6 +1,8 @@
 let 
 
  type any = {any : int}
+ type any2 = {any2 : int}
+ 
  var buffer := getchar()
 
 function readint(any: any) : int =
