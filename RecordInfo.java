@@ -64,13 +64,13 @@ class RecordInfo {
     public void release() {
 	int lasttos = tos;
 	tos = ((Integer)(markStack.pop())).intValue();
-	if (lasttos > tos) func.append(new Psh(tos-lasttos));
+	//if (lasttos > tos) func.append(new Psh(tos-lasttos));
     }
 
     /// Return an operand pointing the next available space on the stack
     public Operand newTmp() {
 	FrameRel op = new FrameRel(tos);
-	func.append(new Psh(1));
+	//func.append(new Psh(1));
 	tos++;
 	if ( tos > max ) max = tos;
 	return op;
@@ -99,7 +99,11 @@ class RecordInfo {
       for(int i = 0; i < functionArgs.size(); ++i)
         ((FrameRel)functionArgs.get(i)).offset += max;
 	
-      func.insert(new Psh(max));
+      //func.insert(new Psh(max));
+      
+      Statement temp = func.next.next;
+      func.next.next = new Psh(max);
+      func.next.next.next = temp;  
       
       int oldMax = 0;
       
