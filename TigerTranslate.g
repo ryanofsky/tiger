@@ -206,6 +206,9 @@ expr [ Operand d, RecordInfo r ] returns [Type t]
         t = env.getIntType();
       }
 
+    boolean doingStrings = (a.actual() instanceof Semant.STRING);
+
+
       if (lazyLabel != null)
       {
         r.append(lazyLabel);
@@ -238,7 +241,7 @@ expr [ Operand d, RecordInfo r ] returns [Type t]
         else // can never happen
           throw new Error("Internal Error. Unrecognized operator '" + op + "'");
 
-        r.append(new Binop(opCode, d, temp1, tmp));
+        r.append(new Binop(opCode, d, temp1, tmp, doingStrings));
         r.release();
       }
     }
@@ -479,7 +482,7 @@ expr [ Operand d, RecordInfo r ] returns [Type t]
       Operand tempVar = r.newTmp();
     } b=expr[tempVar,r]
     {
-      r.append(new Binop(Binop.GT, tempVar, loopVar, tempVar))
+      r.append(new Binop(Binop.GT, tempVar, loopVar, tempVar, false))
        .append(new Bnz(new LabelOperand(bottomFor), tempVar));
     } c=expr[d,r]
     {
@@ -492,7 +495,7 @@ expr [ Operand d, RecordInfo r ] returns [Type t]
       env.leaveScope();
       t = env.getVoidType();
 
-      r.append(new Binop(Binop.ADD, loopVar, loopVar, new IntConstant(1)))
+      r.append(new Binop(Binop.ADD, loopVar, loopVar, new IntConstant(1), false))
        .append(new Jmp(new LabelOperand(topFor)))
        .append(bottomFor);
 
