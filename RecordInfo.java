@@ -72,6 +72,7 @@ class RecordInfo {
 	FrameRel op = new FrameRel(tos);
 	func.append(new Psh(1));
 	tos++;
+	if ( tos > max ) max = tos;
 	return op;
     }
     
