@@ -1,0 +1,7 @@
+let
+  type a = array of int  
+  var b : a := a [5] of 0
+  var c := 8
+in
+  b[10+c]
+end
